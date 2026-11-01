@@ -6,17 +6,17 @@
 	<array>
 		<dict>
 			<key>description</key>
-			<string>NeuralAmpModeler</string>
+			<string>Deathknell Requiem</string>
 			<key>factoryFunction</key>
 			<string>NeuralAmpModeler_Factory</string>
 			<key>manufacturer</key>
-			<string>SDAa</string>
+			<string>Dkn1</string>
 			<key>name</key>
-			<string>Steven Atkinson: NeuralAmpModeler</string>
+			<string>Deathknell: Deathknell Requiem</string>
 			<key>sandboxSafe</key>
 			<true/>
 			<key>subtype</key>
-			<string>1YEo</string>
+			<string>DkRq</string>
 			<key>type</key>
 			<string>aufx</string>
 			<key>version</key>
@@ -30,7 +30,7 @@
 	<key>CFBundleExecutable</key>
 	<string>NeuralAmpModeler</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NeuralAmpModeler v0.8.0 Copyright 2022 Steven Atkinson</string>
+	<string>NeuralAmpModeler v0.8.0 Copyright 2026 Deathknell. Based on Neural Amp Modeler, Copyright 2022 Steven Atkinson</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.StevenAtkinson.audiounit.NeuralAmpModeler</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -42,7 +42,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8.0</string>
 	<key>CFBundleSignature</key>
-	<string>1YEo</string>
+	<string>DkRq</string>
 	<key>CFBundleVersion</key>
 	<string>0.8.0</string>
 	<key>CSResourcesFileMapped</key>

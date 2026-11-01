@@ -3,11 +3,8 @@ name: Build Native
 on:
   workflow_dispatch:
   pull_request:
-  schedule:
-    - cron: '0 8 * * 2'
-  #push:
-    # tags:
-    #   - "v*"
+  push:
+    branches: [main]
 
 env:
   PROJECT_NAME: NeuralAmpModeler
@@ -66,7 +63,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{env.PROJECT_NAME}}-${{matrix.artifact_ext}}
+        name: DeathknellRequiem-${{matrix.artifact_ext}}
         path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out
 
   # test:
@@ -86,7 +83,7 @@ jobs:
   #     - name: Download artifact
   #       uses: actions/download-artifact@v2
   #       with:
-  #         name: ${{env.PROJECT_NAME}}-${{matrix.artifact_ext}}
+  #         name: DeathknellRequiem-${{matrix.artifact_ext}}
 
   #     - name: Unzip files
   #       run: |
