@@ -19,6 +19,10 @@
 #include "IWebViewControl.h"
 #include "DKRequiemUI.h"
 #include <fstream>
+#if !defined(_WIN32) && !defined(strnicmp)
+#include <strings.h>
+#define strnicmp strncasecmp // WDL's dirscan.h expects the Windows name
+#endif
 #include "dirscan.h"
 
 using namespace iplug;
