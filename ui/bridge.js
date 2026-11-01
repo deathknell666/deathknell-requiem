@@ -6,7 +6,7 @@
 
 const DK = (() => {
   // Engine parameter indices (must match EParams in NeuralAmpModeler.h)
-  const P = { input: 0, gateThreshold: 1, bass: 2, mid: 3, treble: 4, output: 5, gateActive: 6, eqActive: 7, irOn: 8 };
+  const P = { input: 0, gateThreshold: 1, bass: 2, mid: 3, treble: 4, output: 5, gateActive: 6, eqActive: 7, irOn: 8, chopActive: 13, chopRate: 14 };
 
   const clamp = (x) => Math.max(0, Math.min(1, x));
   const baseName = (path) => (path || '').split(/[\\/]/).pop();
@@ -65,6 +65,9 @@ const DK = (() => {
     if (g >= 0.01) sendParam(P.gateThreshold, gateToEngine(g));
     sendParam(P.irOn, on.cab ? 1 : 0);
     sendParam(P.eqActive, 1);
+    // Wraith chopper: CHOP footswitch (held) and the Speed knob (note value, 7 steps)
+    sendParam(P.chopActive, st.wHeld && st.wHeld.chop ? 1 : 0);
+    sendParam(P.chopRate, Math.round(val('wr_Speed', 0.84) * 6) / 6);
   };
 
   // Apply an engine parameter (from the host, automation or a preset) to the GUI state.
@@ -84,6 +87,8 @@ const DK = (() => {
       else if (idx === P.gateThreshold) vals.gate_Gate = Math.max(0.01, gateFromEngine(n));
       else if (idx === P.gateActive) on.gate = n >= 0.5;
       else if (idx === P.irOn) on.cab = n >= 0.5;
+      else if (idx === P.chopRate) vals.wr_Speed = n;
+      else if (idx === P.chopActive) return { wHeld: Object.assign({}, s.wHeld || {}, { chop: n >= 0.5 }) };
       else return null;
       return { vals, on };
     });

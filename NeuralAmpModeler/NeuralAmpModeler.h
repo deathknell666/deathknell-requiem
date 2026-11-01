@@ -55,6 +55,9 @@ enum EParams
   kInputCalibrationLevel,
   kOutputMode,
   kSlim,
+  // Deathknell Requiem: Wraith chopper (rhythmic on/off, synced to the host tempo)
+  kChopActive,
+  kChopRate,
   kNumParams
 };
 
@@ -361,5 +364,10 @@ private:
   std::vector<DKFile> mModelList, mIRList;
   std::string mModelListDir, mIRListDir;
   bool mWebForceRescan = false;
+  // Chopper state (audio thread only)
+  double mChopPhase = 0.0; // 0..1 through one step
+  double mChopGain = 1.0; // smoothed gain, so the cuts don't click
+  bool mChopWasActive = false;
+  void _ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames);
   float mDKWindowScale = 1.0f; // Small / Medium / Large window, picked from the GUI's right-click menu
 };

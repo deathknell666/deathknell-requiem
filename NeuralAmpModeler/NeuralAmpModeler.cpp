@@ -102,6 +102,8 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kInputCalibrationLevel)
     ->InitDouble(kInputCalibrationLevelParamName.c_str(), kDefaultInputCalibrationLevel, -60.0, 60.0, 0.1, "dBu");
   GetParam(kSlim)->InitDouble("Slim", 0.0, 0.0, 1.0, 0.01);
+  GetParam(kChopActive)->InitBool("Chop", false);
+  GetParam(kChopRate)->InitEnum("Chop rate", 5, {"1/2", "1/4", "1/4.", "1/8", "1/8T", "1/16", "1/32"});
 
   mNoiseGateTrigger.AddListener(&mNoiseGateGain);
 
@@ -382,6 +384,9 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   // Apply the noise gate after the NAM
   sample** gateGainOutput =
     noiseGateActive ? mNoiseGateGain.Process(mOutputPointers, numChannelsInternal, numFrames) : mOutputPointers;
+
+  // Wraith chopper
+  _ProcessChopper(gateGainOutput, numChannelsInternal, numFrames);
 
   sample** toneStackOutPointers = (toneStackActive && mToneStack != nullptr)
                                     ? mToneStack->Process(gateGainOutput, numChannelsInternal, nFrames)
@@ -1045,6 +1050,47 @@ void NeuralAmpModeler::_UpdateMeters(sample** inputPointer, sample** outputPoint
     mWebInPeak = inPeak;
   if (outPeak > mWebOutPeak.load())
     mWebOutPeak = outPeak;
+}
+
+// Deathknell Requiem: Wraith chopper ===========================================
+// Cuts the sound on and off in time with the song: on for the first half of each
+// step, off for the second half. The step length is a note value (1/16 etc.) at
+// the host tempo. While the host is playing, the chops line up with its beat grid.
+
+void NeuralAmpModeler::_ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames)
+{
+  const bool active = GetParam(kChopActive)->Bool();
+  if (!active && !mChopWasActive && mChopGain >= 1.0)
+    return; // bypassed and fully open: nothing to do
+
+  static const double kBeatsPerStep[] = {2.0, 1.0, 1.5, 0.5, 1.0 / 3.0, 0.25, 0.125};
+  const int rateIdx = std::clamp(GetParam(kChopRate)->Int(), 0, 6);
+  const double beats = kBeatsPerStep[rateIdx];
+  double tempo = GetTempo();
+  if (!(tempo > 1.0))
+    tempo = 120.0;
+  const double sampleRate = GetSampleRate();
+  const double stepsPerSample = tempo / (60.0 * beats * sampleRate);
+  const double smooth = 1.0 - std::exp(-1.0 / (0.0015 * sampleRate)); // ~1.5 ms ramps
+
+  if (active && GetTransportIsRunning())
+    mChopPhase = std::fmod(std::max(0.0, GetPPQPos()) / beats, 1.0); // lock to the host's grid
+  else if (active && !mChopWasActive)
+    mChopPhase = 0.0; // start each press with the sound on
+  mChopWasActive = active;
+
+  for (size_t s = 0; s < numFrames; s++)
+  {
+    const double target = (!active || mChopPhase < 0.5) ? 1.0 : 0.0;
+    mChopGain += (target - mChopGain) * smooth;
+    if (!active && mChopGain > 0.9999)
+      mChopGain = 1.0;
+    for (size_t c = 0; c < numChannels; c++)
+      buffers[c][s] *= (sample)mChopGain;
+    mChopPhase += stepsPerSample;
+    if (mChopPhase >= 1.0)
+      mChopPhase -= std::floor(mChopPhase);
+  }
 }
 
 // Deathknell Requiem web GUI ================================================
