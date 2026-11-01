@@ -15,7 +15,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
 @media (prefers-reduced-motion: reduce){*{animation:none!important}}
 </style>
 <style>html,body{margin:0;overflow:hidden;background:#1a1d20}
-/* The design is 1100x860; the plugin window is 85% of that so it fits on a laptop screen. */
+/* The design is 1100x860. bridge.js zooms it to fit the plugin window (85% at the Medium size). */
 #app{zoom:0.85}</style>
 </head>
 <body>
@@ -1684,6 +1684,7 @@ const DK = (() => {
     if (!msg) return;
     if (msg.type === 'state') {
       state.live = true;
+      if (msg.windowScale) state.windowScale = msg.windowScale;
       state.model = msg.model || '';
       state.ir = msg.ir || '';
       (msg.params || []).forEach((n, idx) => applyParam(idx, n));
@@ -1777,6 +1778,50 @@ const DK = (() => {
       return v;
     }
   };
+
+  // Fit the 1100px-wide design to the window, whatever size the plugin window is.
+  const fit = () => {
+    const app = document.getElementById('app');
+    if (app && window.innerWidth > 0) app.style.zoom = String(window.innerWidth / 1100);
+  };
+  window.addEventListener('resize', fit);
+  setTimeout(fit, 0);
+
+  // Right-click menu: window size (like most amp plugins)
+  const SIZES = [
+    { label: 'Small', scale: 0.8 },
+    { label: 'Medium', scale: 1.0 },
+    { label: 'Large', scale: 1.18 }
+  ];
+  let menu = null;
+  const closeMenu = () => { if (menu) { menu.remove(); menu = null; } };
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    closeMenu();
+    menu = document.createElement('div');
+    menu.setAttribute('style', 'position: fixed; z-index: 9999; min-width: 150px; padding: 6px 0; background: #15171b; border: 3px solid #0b0b0c; border-radius: 6px; box-shadow: 4px 4px 0 #0b0b0c; font-family: "IBM Plex Sans", sans-serif; font-size: 13px; color: #e9e2d6');
+    const head = document.createElement('div');
+    head.textContent = 'WINDOW SIZE';
+    head.setAttribute('style', 'padding: 4px 14px 6px; font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8');
+    menu.appendChild(head);
+    const current = state.windowScale || window.innerWidth / (1100 * 0.85);
+    SIZES.forEach((sz) => {
+      const item = document.createElement('div');
+      const on = Math.abs(current - sz.scale) < 0.05 || (typeof IPlugSendMsg !== 'function' && sz.scale === 1.0);
+      item.textContent = (on ? '\u2713 ' : '\u2003') + sz.label;
+      item.setAttribute('style', 'padding: 6px 14px; cursor: pointer');
+      item.onmouseenter = () => { item.style.background = '#3d434f'; };
+      item.onmouseleave = () => { item.style.background = ''; };
+      item.onclick = () => { closeMenu(); state.windowScale = sz.scale; send({ type: 'windowSize', scale: sz.scale }); };
+      menu.appendChild(item);
+    });
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.min(e.clientX, window.innerWidth - r.width - 4) + 'px';
+    menu.style.top = Math.min(e.clientY, window.innerHeight - r.height - 4) + 'px';
+  });
+  document.addEventListener('mousedown', (e) => { if (menu && !menu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
   const api = { recv, wrap, send, state };
   window.DK = api;

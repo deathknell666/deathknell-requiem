@@ -361,4 +361,5 @@ private:
   std::vector<DKFile> mModelList, mIRList;
   std::string mModelListDir, mIRListDir;
   bool mWebForceRescan = false;
+  float mDKWindowScale = 1.0f; // Small / Medium / Large window, picked from the GUI's right-click menu
 };

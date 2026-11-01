@@ -19,6 +19,7 @@
 #include "IWebViewControl.h"
 #include "DKRequiemUI.h"
 #include <fstream>
+#include "dirscan.h"
 
 using namespace iplug;
 using namespace igraphics;
@@ -1102,15 +1103,27 @@ std::string _DKLower(std::string s)
 
 // Read the capture's tone type from the .nam file's metadata (it sits near the start of the file).
 // Falls back to guessing from the file name.
-std::string _DKCaptureType(const std::filesystem::path& file, const std::string& name)
+// std::filesystem's directory listing needs macOS 10.15, and the project targets older macOS, so use WDL.
+std::string _DKReadHead(const std::string& utf8Path, size_t bytes)
 {
-  std::string head;
-  {
-    std::ifstream f(file, std::ios::binary);
-    head.resize(32768);
-    f.read(&head[0], (std::streamsize)head.size());
-    head.resize((size_t)f.gcount());
-  }
+  std::string head(bytes, '\0');
+#ifdef OS_WIN
+  wchar_t wpath[4096];
+  UTF8ToUTF16(wpath, utf8Path.c_str(), 4096);
+  FILE* f = _wfopen(wpath, L"rb");
+#else
+  FILE* f = fopen(utf8Path.c_str(), "rb");
+#endif
+  if (!f)
+    return "";
+  head.resize(fread(&head[0], 1, bytes, f));
+  fclose(f);
+  return head;
+}
+
+std::string _DKCaptureType(const std::string& file, const std::string& name)
+{
+  const std::string head = _DKReadHead(file, 32768);
   std::string type;
   const auto key = head.find("\"tone_type\"");
   if (key != std::string::npos)
@@ -1162,23 +1175,31 @@ int _DKTypeRank(const std::string& t)
   return 5;
 }
 
-std::vector<NeuralAmpModeler::DKFile> _DKScanFolder(const std::filesystem::path& dir, bool isModel)
+std::vector<NeuralAmpModeler::DKFile> _DKScanFolder(const std::string& dir, bool isModel)
 {
   std::vector<NeuralAmpModeler::DKFile> out;
-  std::error_code ec;
-  for (const auto& entry : std::filesystem::directory_iterator(dir, ec))
+  WDL_DirScan scan;
+  if (!scan.First(dir.c_str()))
   {
-    if (!entry.is_regular_file(ec))
-      continue;
-    const std::string ext = _DKLower(entry.path().extension().u8string());
-    if (ext != (isModel ? ".nam" : ".wav"))
-      continue;
-    NeuralAmpModeler::DKFile f;
-    f.path = entry.path().u8string();
-    f.name = entry.path().stem().u8string();
-    if (isModel)
-      f.type = _DKCaptureType(entry.path(), f.name);
-    out.push_back(f);
+    do
+    {
+      if (scan.GetCurrentIsDirectory())
+        continue;
+      const std::string fn = scan.GetCurrentFN();
+      const auto dot = fn.find_last_of('.');
+      if (dot == std::string::npos || dot == 0)
+        continue;
+      if (_DKLower(fn.substr(dot)) != (isModel ? ".nam" : ".wav"))
+        continue;
+      WDL_String full;
+      scan.GetCurrentFullFN(&full);
+      NeuralAmpModeler::DKFile f;
+      f.path = full.Get();
+      f.name = fn.substr(0, dot);
+      if (isModel)
+        f.type = _DKCaptureType(f.path, f.name);
+      out.push_back(f);
+    } while (!scan.Next());
   }
   std::sort(out.begin(), out.end(), [](const NeuralAmpModeler::DKFile& a, const NeuralAmpModeler::DKFile& b) {
     const int ra = _DKTypeRank(a.type), rb = _DKTypeRank(b.type);
@@ -1200,11 +1221,12 @@ void NeuralAmpModeler::_RefreshFileLists(bool force)
     auto& listDir = isModel ? mModelListDir : mIRListDir;
     if (!current.GetLength())
       continue;
-    const auto dir = std::filesystem::u8path(current.Get()).parent_path();
-    const std::string dirStr = dir.u8string();
+    WDL_String dirW(current.Get());
+    dirW.remove_filepart();
+    const std::string dirStr = dirW.Get();
     if (!force && dirStr == listDir)
       continue;
-    list = _DKScanFolder(dir, isModel);
+    list = _DKScanFolder(dirStr, isModel);
     listDir = dirStr;
     _SendFileListToWeb(isModel);
   }
@@ -1291,6 +1313,7 @@ void NeuralAmpModeler::_SendFullStateToWeb()
 {
   nlohmann::json j;
   j["type"] = "state";
+  j["windowScale"] = mDKWindowScale;
   j["model"] = std::string(mNAMPath.Get());
   j["ir"] = std::string(mIRPath.Get());
   std::vector<double> params;
@@ -1318,6 +1341,9 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
   if (type == "ready")
   {
     mWebReady = true;
+    if (auto* pGraphics = GetUI())
+      if (pGraphics->GetDrawScale() != mDKWindowScale)
+        pGraphics->Resize(PLUG_WIDTH, PLUG_HEIGHT, mDKWindowScale);
     _SendFullStateToWeb();
     _RefreshFileLists(false);
     _SendFileListToWeb(true);
@@ -1334,6 +1360,13 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
       SendParameterValueFromUI(idx, value);
       EndInformHostOfParamChangeFromUI(idx);
     }
+  }
+  else if (type == "windowSize")
+  {
+    const float scale = (float)std::clamp(j.value("scale", 1.0), 0.5, 2.0);
+    mDKWindowScale = scale;
+    if (auto* pGraphics = GetUI())
+      pGraphics->Resize(PLUG_WIDTH, PLUG_HEIGHT, scale);
   }
   else if (type == "stepModel" || type == "stepIR")
   {
