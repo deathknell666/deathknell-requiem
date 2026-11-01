@@ -34,6 +34,13 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		F9D540EECC952E40D8468081 /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		D85FCE4BC21B5C608148A377 /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		ED69094E7B07A43E62BDABDF /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		91FB57081A5C6338CD4DDDC6 /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		48146F3C77B184E7CF42C55E /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		E89892FDC2E458E8A48409D3 /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		8196EBBA6BF9AB4C211947E6 /* IPlugWebView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFE6F1754F34847391DF2833 /* IPlugWebView.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		4F037D76261F9DB400A752B5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F037D75261F9DB400A752B5 /* Images.xcassets */; };
 		4F037D77261F9DB400A752B5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F037D75261F9DB400A752B5 /* Images.xcassets */; };
 		4F03A58C20A4621100EBDFFB /* IGraphicsNanoVG.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F03A55020A4621000EBDFFB /* IGraphicsNanoVG.h */; };
@@ -948,6 +955,7 @@
 		4FB1F57F20E4AFEE004157C8 /* IGraphicsIOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IGraphicsIOS.h; path = ../../iPlug2/IGraphics/Platforms/IGraphicsIOS.h; sourceTree = "<group>"; };
 		4FB1F58020E4AFEE004157C8 /* IGraphicsIOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IGraphicsIOS.mm; path = ../../iPlug2/IGraphics/Platforms/IGraphicsIOS.mm; sourceTree = "<group>"; };
 		4FB1F58120E4AFEE004157C8 /* IGraphicsMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IGraphicsMac.mm; path = ../../iPlug2/IGraphics/Platforms/IGraphicsMac.mm; sourceTree = "<group>"; };
+		BFE6F1754F34847391DF2833 /* IPlugWebView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = IPlugWebView.mm; path = ../../iPlug2/IPlug/Extras/WebView/IPlugWebView.mm; sourceTree = "<group>"; };
 		4FB1F58220E4AFEE004157C8 /* IGraphicsWin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IGraphicsWin.cpp; path = ../../iPlug2/IGraphics/Platforms/IGraphicsWin.cpp; sourceTree = "<group>"; };
 		4FB1F58320E4AFEF004157C8 /* IGraphicsLinux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IGraphicsLinux.h; path = ../../iPlug2/IGraphics/Platforms/IGraphicsLinux.h; sourceTree = "<group>"; };
 		4FB1F58420E4AFEF004157C8 /* IGraphicsIOS_view.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IGraphicsIOS_view.h; path = ../../iPlug2/IGraphics/Platforms/IGraphicsIOS_view.h; sourceTree = "<group>"; };
@@ -1888,6 +1896,7 @@
 				4FB1F58620E4AFEF004157C8 /* IGraphicsMac_view.mm */,
 				4FB1F58720E4AFEF004157C8 /* IGraphicsMac.h */,
 				4FB1F58120E4AFEE004157C8 /* IGraphicsMac.mm */,
+				BFE6F1754F34847391DF2833 /* IPlugWebView.mm */,
 				4F6FD2AD22675B6300FC59E6 /* IGraphicsCoreText.h */,
 				4F6FD2AF22675B6300FC59E6 /* IGraphicsCoreText.mm */,
 				4FB1F57C20E4AFEE004157C8 /* IGraphicsWeb.cpp */,
@@ -2631,6 +2640,7 @@
 				4F78D95C13B63BA50032E0F3 /* IPlugParameter.cpp in Sources */,
 				4F2FB1B52A0047430027AB66 /* activations.cpp in Sources */,
 				4FB1F58C20E4B006004157C8 /* IGraphicsMac.mm in Sources */,
+				F9D540EECC952E40D8468081 /* IPlugWebView.mm in Sources */,
 				4F3862F22014BBEC0009F402 /* NeuralAmpModeler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2679,6 +2689,7 @@
 				4F3EE1DB231438D000004786 /* IPlugAPP_main.cpp in Sources */,
 				4F2FB1682A0047430027AB66 /* dsp.cpp in Sources */,
 				4F3EE1DD231438D000004786 /* IGraphicsMac.mm in Sources */,
+				D85FCE4BC21B5C608148A377 /* IPlugWebView.mm in Sources */,
 				4F3EE1DE231438D000004786 /* NeuralAmpModeler.cpp in Sources */,
 				4F2FB1A42A0047430027AB66 /* convnet.cpp in Sources */,
 				4F3EE1E0231438D000004786 /* IPlugAPIBase.cpp in Sources */,
@@ -2706,6 +2717,7 @@
 				4F78BE1522E7406D00AD537E /* NeuralAmpModeler.cpp in Sources */,
 				4F78BE1622E7406D00AD537E /* IGraphicsMac_view.mm in Sources */,
 				4F78BE1722E7406D00AD537E /* IGraphicsMac.mm in Sources */,
+				ED69094E7B07A43E62BDABDF /* IPlugWebView.mm in Sources */,
 				4F78BE1822E7406D00AD537E /* IGraphicsCoreText.mm in Sources */,
 				4F78BE1E22E7406D00AD537E /* IGraphicsNanoVG_src.m in Sources */,
 				4F78BE1F22E7406D00AD537E /* IGraphics.cpp in Sources */,
@@ -2774,6 +2786,7 @@
 				4F815983205D50EB00393585 /* timer.cpp in Sources */,
 				4F815989205D50EB00393585 /* funknown.cpp in Sources */,
 				4FB1F58B20E4B006004157C8 /* IGraphicsMac.mm in Sources */,
+				91FB57081A5C6338CD4DDDC6 /* IPlugWebView.mm in Sources */,
 				4F81598E205D51F000393585 /* vstbus.cpp in Sources */,
 				4F6369ED20A466470022C370 /* IControl.cpp in Sources */,
 				4F35DEAF207E5C5A00867D8F /* IPlugPluginBase.cpp in Sources */,
@@ -2854,6 +2867,7 @@
 				4F6FD2B522675B6300FC59E6 /* IGraphicsCoreText.mm in Sources */,
 				4FB600281567CB0A0020189A /* IPlugAAX_Describe.cpp in Sources */,
 				4FB1F58D20E4B007004157C8 /* IGraphicsMac.mm in Sources */,
+				48146F3C77B184E7CF42C55E /* IPlugWebView.mm in Sources */,
 				4F2FB16D2A0047430027AB66 /* NoiseGate.cpp in Sources */,
 				4F7C4962255DDFC600DF7588 /* IPopupMenuControl.cpp in Sources */,
 				4F2FB1592A0047420027AB66 /* RecursiveLinearFilter.cpp in Sources */,
@@ -2868,6 +2882,7 @@
 				4F03A5B220A4621100EBDFFB /* IGraphics.cpp in Sources */,
 				4F7C4966255DDFC800DF7588 /* ITextEntryControl.cpp in Sources */,
 				4FB1F58F20E4B009004157C8 /* IGraphicsMac.mm in Sources */,
+				E89892FDC2E458E8A48409D3 /* IPlugWebView.mm in Sources */,
 				4F6369F120A466470022C370 /* IControl.cpp in Sources */,
 				4F6FD2B722675B6300FC59E6 /* IGraphicsCoreText.mm in Sources */,
 				4F8C10E620BA2796006320CD /* IGraphicsEditorDelegate.cpp in Sources */,
@@ -2927,6 +2942,7 @@
 				4F690C9B203A345100A4A13E /* IPlugAPP_main.cpp in Sources */,
 				4F2FB1602A0047430027AB66 /* dsp.cpp in Sources */,
 				4FB1F58920E4B004004157C8 /* IGraphicsMac.mm in Sources */,
+				8196EBBA6BF9AB4C211947E6 /* IPlugWebView.mm in Sources */,
 				4F3862EF2014BBEC0009F402 /* NeuralAmpModeler.cpp in Sources */,
 				4F2FB19C2A0047430027AB66 /* convnet.cpp in Sources */,
 				4F78D90B13B63BA50032E0F3 /* IPlugAPIBase.cpp in Sources */,

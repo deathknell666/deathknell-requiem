@@ -53,6 +53,15 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: microsoft/setup-msbuild@v1.0.2
 
+    - name: Set up NuGet (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: nuget/setup-nuget@v2
+
+    - name: Restore WebView2 packages (Windows)
+      if: matrix.os == 'windows-latest'
+      run: nuget restore ${{env.PROJECT_NAME}}\${{env.PROJECT_NAME}}.sln
+      shell: pwsh
+
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       run: |

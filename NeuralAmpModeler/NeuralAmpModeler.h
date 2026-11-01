@@ -15,6 +15,14 @@
 #include "ISender.h"
 
 
+namespace iplug
+{
+namespace igraphics
+{
+class IWebViewControl;
+}
+} // namespace iplug
+
 const int kNumPresets = 1;
 // The plugin is mono inside
 constexpr size_t kNumChannelsInternal = 1;
@@ -206,6 +214,7 @@ public:
   bool SerializeState(iplug::IByteChunk& chunk) const override;
   int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
   void OnUIOpen() override;
+  void OnUIClose() override;
   bool OnHostRequestingSupportedViewConfiguration(int width, int height) override { return true; }
 
   void OnParamChange(int paramIdx) override;
@@ -263,6 +272,13 @@ private:
   int _UnserializeStateWithKnownVersion(const iplug::IByteChunk& chunk, int startPos);
   // Hopefully 0.7.3-0.7.8, but no gurantees
   int _UnserializeStateWithUnknownVersion(const iplug::IByteChunk& chunk, int startPos);
+
+  // Deathknell Requiem web GUI (see ui/ and DKRequiemUI.h)
+  void _LoadWebUI(iplug::igraphics::IWebViewControl* pWebView);
+  void _OnWebMessage(const char* jsonStr);
+  void _SendToWeb(const std::string& json);
+  void _SendFullStateToWeb();
+  void _SendFilesToWeb();
 
   // Update all controls that depend on a model
   void _UpdateControlsFromModel();
@@ -324,4 +340,11 @@ private:
   std::unordered_map<std::string, double> mNAMParams = {{"Input", 0.0}, {"Output", 0.0}};
 
   NAMSender mInputSender, mOutputSender;
+
+  // Web GUI state
+  iplug::igraphics::IWebViewControl* mWebView = nullptr;
+  bool mWebReady = false;
+  std::atomic<bool> mWebFilesDirty = false;
+  std::atomic<float> mWebInPeak = 0.0f;
+  std::atomic<float> mWebOutPeak = 0.0f;
 };

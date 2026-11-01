@@ -16,6 +16,9 @@
 #include "architecture.hpp"
 
 #include "NeuralAmpModelerControls.h"
+#include "IWebViewControl.h"
+#include "DKRequiemUI.h"
+#include <fstream>
 
 using namespace iplug;
 using namespace igraphics;
@@ -311,6 +314,14 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // pGraphics->GetControlWithTag(kCtrlTagOutNorm)->SetMouseEventsWhenDisabled(false);
     // pGraphics->GetControlWithTag(kCtrlTagCalibrateInput)->SetMouseEventsWhenDisabled(false);
+
+    // Deathknell Requiem GUI: our HTML interface covers the whole window and talks to the engine.
+    // The original controls above stay attached underneath so the rest of the code keeps working.
+    mWebReady = false;
+    mWebView = new IWebViewControl(
+      b, true, [this](IWebViewControl* pWebView) { _LoadWebUI(pWebView); },
+      [this](IWebViewControl* pWebView, const char* json) { _OnWebMessage(json); });
+    pGraphics->AttachControl(mWebView);
   };
 }
 
@@ -420,6 +431,17 @@ void NeuralAmpModeler::OnIdle()
   mInputSender.TransmitData(*this);
   mOutputSender.TransmitData(*this);
 
+  if (mWebView && mWebReady)
+  {
+    if (mWebFilesDirty.exchange(false))
+      _SendFilesToWeb();
+    const float inPeak = mWebInPeak.exchange(0.0f);
+    const float outPeak = mWebOutPeak.exchange(0.0f);
+    std::stringstream ss;
+    ss << "{\"type\":\"meters\",\"in\":" << inPeak << ",\"out\":" << outPeak << "}";
+    _SendToWeb(ss.str());
+  }
+
   if (mNewModelLoadedInDSP)
   {
     if (auto* pGraphics = GetUI())
@@ -526,8 +548,22 @@ void NeuralAmpModeler::OnParamChange(int paramIdx)
   }
 }
 
+void NeuralAmpModeler::OnUIClose()
+{
+  mWebView = nullptr;
+  mWebReady = false;
+  Plugin::OnUIClose();
+}
+
 void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
 {
+  if (source != kUI && mWebView && mWebReady)
+  {
+    std::stringstream ss;
+    ss << "{\"type\":\"param\",\"idx\":" << paramIdx << ",\"value\":" << GetParam(paramIdx)->GetNormalized() << "}";
+    _SendToWeb(ss.str());
+  }
+
   if (auto pGraphics = GetUI())
   {
     bool active = GetParam(paramIdx)->Bool();
@@ -770,6 +806,7 @@ std::string NeuralAmpModeler::_StageModel(const WDL_String& modelPath)
     mStagedModel = std::move(temp);
     mNAMPath = modelPath;
     SendControlMsgFromDelegate(kCtrlTagModelFileBrowser, kMsgTagLoadedModel, mNAMPath.GetLength(), mNAMPath.Get());
+    mWebFilesDirty = true;
   }
   catch (std::runtime_error& e)
   {
@@ -810,6 +847,7 @@ dsp::wav::LoadReturnCode NeuralAmpModeler::_StageIR(const WDL_String& irPath)
   {
     mIRPath = irPath;
     SendControlMsgFromDelegate(kCtrlTagIRFileBrowser, kMsgTagLoadedIR, mIRPath.GetLength(), mIRPath.Get());
+    mWebFilesDirty = true;
   }
   else
   {
@@ -986,6 +1024,145 @@ void NeuralAmpModeler::_UpdateMeters(sample** inputPointer, sample** outputPoint
   const int nChansHack = 1;
   mInputSender.ProcessBlock(inputPointer, (int)nFrames, kCtrlTagInputMeter, nChansHack);
   mOutputSender.ProcessBlock(outputPointer, (int)nFrames, kCtrlTagOutputMeter, nChansHack);
+
+  // Peaks for the web GUI meters (read and reset in OnIdle)
+  float inPeak = 0.0f, outPeak = 0.0f;
+  for (size_t i = 0; i < nFrames; i++)
+  {
+    inPeak = std::max(inPeak, (float)std::fabs(inputPointer[0][i]));
+    outPeak = std::max(outPeak, (float)std::fabs(outputPointer[0][i]));
+  }
+  if (inPeak > mWebInPeak.load())
+    mWebInPeak = inPeak;
+  if (outPeak > mWebOutPeak.load())
+    mWebOutPeak = outPeak;
+}
+
+// Deathknell Requiem web GUI ================================================
+
+void NeuralAmpModeler::_LoadWebUI(IWebViewControl* pWebView)
+{
+#ifdef OS_WIN
+  // WebView2 can't take a page this big as a string, so serve it from a file in the temp folder.
+  wchar_t tempDir[MAX_PATH] = {0};
+  GetTempPathW(MAX_PATH, tempDir);
+  std::wstring pathW = std::wstring(tempDir) + L"DeathknellRequiemUI.html";
+  {
+    std::ofstream f(pathW, std::ios::binary | std::ios::trunc);
+    f << DKRequiemUIHTML();
+  }
+  WDL_String path;
+  UTF16ToUTF8(path, pathW.c_str());
+  std::string url(path.Get());
+  std::replace(url.begin(), url.end(), '\\', '/');
+  url = "/" + url; // LoadFile() adds "file://"
+  pWebView->LoadFile(url.c_str());
+#else
+  pWebView->LoadHTML(DKRequiemUIHTML().c_str());
+#endif
+}
+
+void NeuralAmpModeler::_SendToWeb(const std::string& json)
+{
+  if (!mWebView)
+    return;
+  const std::string script = "window.DK && DK.recv(" + json + ");";
+  mWebView->EvaluateJavaScript(script.c_str());
+}
+
+void NeuralAmpModeler::_SendFilesToWeb()
+{
+  nlohmann::json j;
+  j["type"] = "files";
+  j["model"] = std::string(mNAMPath.Get());
+  j["ir"] = std::string(mIRPath.Get());
+  _SendToWeb(j.dump());
+}
+
+void NeuralAmpModeler::_SendFullStateToWeb()
+{
+  nlohmann::json j;
+  j["type"] = "state";
+  j["model"] = std::string(mNAMPath.Get());
+  j["ir"] = std::string(mIRPath.Get());
+  std::vector<double> params;
+  for (int i = 0; i < kNumParams; i++)
+    params.push_back(GetParam(i)->GetNormalized());
+  j["params"] = params;
+  _SendToWeb(j.dump());
+}
+
+void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
+{
+  nlohmann::json j;
+  try
+  {
+    j = nlohmann::json::parse(jsonStr);
+  }
+  catch (...)
+  {
+    return;
+  }
+  if (!j.is_object())
+    return;
+  const std::string type = j.value("type", "");
+
+  if (type == "ready")
+  {
+    mWebReady = true;
+    _SendFullStateToWeb();
+  }
+  else if (type == "param")
+  {
+    const int idx = j.value("idx", -1);
+    const double value = std::clamp(j.value("value", 0.0), 0.0, 1.0);
+    if (idx >= 0 && idx < kNumParams)
+    {
+      BeginInformHostOfParamChangeFromUI(idx);
+      SendParameterValueFromUI(idx, value);
+      EndInformHostOfParamChangeFromUI(idx);
+    }
+  }
+  else if (type == "loadModel" || type == "loadIR")
+  {
+    IGraphics* pGraphics = GetUI();
+    if (!pGraphics)
+      return;
+    const bool isModel = type == "loadModel";
+    WDL_String fileName, path;
+    if (isModel && mNAMPath.GetLength())
+      path.Set(mNAMPath.Get()), path.remove_filepart();
+    if (!isModel && mIRPath.GetLength())
+      path.Set(mIRPath.Get()), path.remove_filepart();
+    pGraphics->PromptForFile(
+      fileName, path, EFileAction::Open, isModel ? "nam" : "wav",
+      [this, isModel](const WDL_String& chosen, const WDL_String& dir) {
+        if (!chosen.GetLength())
+          return;
+        if (isModel)
+        {
+          const std::string msg = _StageModel(chosen);
+          if (msg.size())
+          {
+            std::stringstream ss;
+            ss << "Failed to load NAM model. Message:\n\n" << msg;
+            _ShowMessageBox(GetUI(), ss.str().c_str(), "Failed to load model!", kMB_OK);
+          }
+        }
+        else
+        {
+          const dsp::wav::LoadReturnCode retCode = _StageIR(chosen);
+          if (retCode != dsp::wav::LoadReturnCode::SUCCESS)
+          {
+            std::stringstream message;
+            message << "Failed to load IR file " << chosen.Get() << ":\n";
+            message << dsp::wav::GetMsgForLoadReturnCode(retCode);
+            _ShowMessageBox(GetUI(), message.str().c_str(), "Failed to load IR!", kMB_OK);
+          }
+        }
+        mWebFilesDirty = true;
+      });
+  }
 }
 
 // HACK
