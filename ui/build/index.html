@@ -14,7 +14,9 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
 @keyframes dkSwing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important}}
 </style>
-<style>html,body{margin:0;overflow:hidden;background:#1a1d20}</style>
+<style>html,body{margin:0;overflow:hidden;background:#1a1d20}
+/* The design is 1100x860; the plugin window is 85% of that so it fits on a laptop screen. */
+#app{zoom:0.85}</style>
 </head>
 <body>
 <div id="app"></div>
@@ -1686,7 +1688,13 @@ const DK = (() => {
     componentDidMount() {
       instance = this;
       if (super.componentDidMount) super.componentDidMount();
+      // Ask the plugin for its state. The first replies can be lost while the page is still
+      // loading, so keep asking until the state arrives.
       send({ type: 'ready' });
+      const retry = setInterval(() => {
+        if (state.live || typeof IPlugSendMsg !== 'function') clearInterval(retry);
+        else send({ type: 'ready' });
+      }, 400);
     }
     componentWillUnmount() {
       if (super.componentWillUnmount) super.componentWillUnmount();

@@ -135,7 +135,9 @@ def main():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deathknell Requiem</title>
 %(helmet)s
-<style>html,body{margin:0;overflow:hidden;background:#1a1d20}</style>
+<style>html,body{margin:0;overflow:hidden;background:#1a1d20}
+/* The design is 1100x860; the plugin window is 85%% of that so it fits on a laptop screen. */
+#app{zoom:0.85}</style>
 </head>
 <body>
 <div id="app"></div>

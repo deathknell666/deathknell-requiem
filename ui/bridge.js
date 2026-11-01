@@ -109,7 +109,13 @@ const DK = (() => {
     componentDidMount() {
       instance = this;
       if (super.componentDidMount) super.componentDidMount();
+      // Ask the plugin for its state. The first replies can be lost while the page is still
+      // loading, so keep asking until the state arrives.
       send({ type: 'ready' });
+      const retry = setInterval(() => {
+        if (state.live || typeof IPlugSendMsg !== 'function') clearInterval(retry);
+        else send({ type: 'ready' });
+      }, 400);
     }
     componentWillUnmount() {
       if (super.componentWillUnmount) super.componentWillUnmount();
