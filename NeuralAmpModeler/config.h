@@ -1,12 +1,12 @@
-#define PLUG_NAME "NeuralAmpModeler"
-#define PLUG_MFR "Steven Atkinson"
+#define PLUG_NAME "Deathknell Requiem"
+#define PLUG_MFR "Deathknell"
 #define PLUG_VERSION_HEX 0x00000800
 #define PLUG_VERSION_STR "0.8.0"
-#define PLUG_UNIQUE_ID '1YEo'
-#define PLUG_MFR_ID 'SDAa'
-#define PLUG_URL_STR "https://github.com/sdatkinson/NeuralAmpModelerPlugin"
+#define PLUG_UNIQUE_ID 'DkRq'
+#define PLUG_MFR_ID 'Dkn1'
+#define PLUG_URL_STR "https://github.com/deathknell666/deathknell-requiem"
 #define PLUG_EMAIL_STR "spam@me.com"
-#define PLUG_COPYRIGHT_STR "Copyright 2022 Steven Atkinson"
+#define PLUG_COPYRIGHT_STR "Copyright 2026 Deathknell. Based on Neural Amp Modeler, Copyright 2022 Steven Atkinson"
 #define PLUG_CLASS_NAME NeuralAmpModeler
 #define BUNDLE_NAME "NeuralAmpModeler"
 #define BUNDLE_MFR "StevenAtkinson"
@@ -43,8 +43,8 @@
 
 #define AAX_TYPE_IDS 'ITP1'
 #define AAX_TYPE_IDS_AUDIOSUITE 'ITA1'
-#define AAX_PLUG_MFR_STR "Acme"
-#define AAX_PLUG_NAME_STR "NeuralAmpModeler\nIPEF"
+#define AAX_PLUG_MFR_STR "Deathknell"
+#define AAX_PLUG_NAME_STR "Deathknell Requiem\nIPEF"
 #define AAX_PLUG_CATEGORY_STR "Effect"
 #define AAX_DOES_AUDIOSUITE 1
 
