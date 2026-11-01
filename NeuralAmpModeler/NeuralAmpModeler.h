@@ -204,6 +204,12 @@ private:
 class NeuralAmpModeler final : public iplug::Plugin
 {
 public:
+  struct DKFile
+  {
+    std::string path;
+    std::string name;
+    std::string type; // capture tone type (clean, crunch, ...); empty for IRs
+  };
   NeuralAmpModeler(const iplug::InstanceInfo& info);
   ~NeuralAmpModeler();
 
@@ -279,6 +285,11 @@ private:
   void _SendToWeb(const std::string& json);
   void _SendFullStateToWeb();
   void _SendFilesToWeb();
+  // Folder browsing: the captures / IRs next to the loaded file, so the GUI's arrows can step through them.
+  void _RefreshFileLists(bool force);
+  void _StepFile(bool isModel, int delta);
+  void _PickFile(bool isModel, int index);
+  void _SendFileListToWeb(bool isModel);
 
   // Update all controls that depend on a model
   void _UpdateControlsFromModel();
@@ -347,4 +358,7 @@ private:
   std::atomic<bool> mWebFilesDirty = false;
   std::atomic<float> mWebInPeak = 0.0f;
   std::atomic<float> mWebOutPeak = 0.0f;
+  std::vector<DKFile> mModelList, mIRList;
+  std::string mModelListDir, mIRListDir;
+  bool mWebForceRescan = false;
 };

@@ -888,11 +888,21 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
         <div style="${v.ampPlate}">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px">
             <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 6px 12px; background: #15171b; border: 3px solid #0b0b0c; border-radius: 5px">
-              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8">AMP CAPTURE (.NAM)</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8">AMP CAPTURE (.NAM) <span style="${v.engine?.modelTypeStyle}">${v.engine?.modelType}</span> <span style="color: #6f767e">${v.engine?.modelPos}</span></span>
               <span style="font-size: 13px; color: #e9e2d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${v.engine?.modelText}</span>
             </div>
+            <button onClick="${v.engine?.prevModel}" aria-label="Previous capture in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u2039</button>
+            <button onClick="${v.engine?.nextModel}" aria-label="Next capture in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u203a</button>
             <button onClick="${v.engine?.loadModel}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; flex-shrink: 0">Load capture\u2026</button>
           </div>
+          ${(v.engine?.hasTypes) ? html`
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #15171b">JUMP TO</span>
+              ${(v.engine?.modelTypes || []).map((t) => html`
+                <button onClick="${t?.pick}" style="${t?.style}">${t?.label}</button>
+              `)}
+            </div>
+          ` : null}
           <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
             ${(v.ampKnobs || []).map((k) => html`
               <button onPointerDown="${k?.down}" onPointerMove="${k?.move}" onPointerUp="${k?.up}" onPointerCancel="${k?.up}" onDblClick="${k?.reset}" onKeyDown="${k?.key}" onWheel="${k?.wheel}" aria-label="${k?.aria}" style="background: none; border: 0; padding: 0; color: #15171b; touch-action: none; cursor: ns-resize; display: flex; flex-direction: column; align-items: center; gap: 3px">
@@ -908,11 +918,11 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
 
     
     ${(v.is?.cab) ? html`
-      <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px; border-radius: 8px; border: 3px solid #0b0b0c">
+      <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px; border-radius: )DKUI",
+    R"DKUI(8px; border: 3px solid #0b0b0c">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
           <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
-          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx)DKUI",
-    R"DKUI(="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
+          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
           <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c" stroke-width="6" stroke-linecap="round"></path>
@@ -957,6 +967,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
             <span style="font-family: 'Cinzel', Georgia, serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: #15171b">IMPULSE RESPONSE</span>
             <div style="display: flex; gap: 10px; align-items: center">
               <div style="flex-grow: 1; min-width: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 10px 12px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${v.engine?.irText}</div>
+              <button onClick="${v.engine?.prevIR}" aria-label="Previous IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u2039</button>
+              <button onClick="${v.engine?.nextIR}" aria-label="Next IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u203a</button>
               <button onClick="${v.engine?.loadIR}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; flex-shrink: 0">Load IR\u2026</button>
             </div>
           </div>
@@ -977,9 +989,9 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
     ${(v.is?.eq) ? html`
       <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; border-radius: 8px; border: 3px solid #0b0b0c; padding: 18px 24px; display: flex; flex-direction: column; gap: 16px">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
-          <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
-          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"><)DKUI",
-    R"DKUI(/circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
+          <rect x="0" y="0" width="1050" h)DKUI",
+    R"DKUI(eight="546" fill="#1a1c24"></rect>
+          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
           <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c" stroke-width="6" stroke-linecap="round"></path>
@@ -1040,11 +1052,11 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; border-radius: 8px; border: 3px solid #0b0b0c; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
           <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
-          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
+          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6)DKUI",
+    R"DKUI("></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
-          <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c")DKUI",
-    R"DKUI( stroke-width="6" stroke-linecap="round"></path>
+          <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c" stroke-width="6" stroke-linecap="round"></path>
           <path d="M0 330 Q200 300 420 322 T840 312 T1050 306 V546 H0 Z" fill="#262a33"></path>
           <path d="M0 400 Q260 376 520 396 T1050 384 V546 H0 Z" fill="#2f3440" stroke="#0b0b0c" stroke-width="3"></path>
           <g fill="#3d434f" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"><path d="M40 360 V318 Q40 298 62 298 Q84 298 84 318 V360 Z"></path><path d="M980 352 V318 H966 V304 H980 V288 H994 V304 H1008 V318 H994 V352 Z"></path></g>
@@ -1120,7 +1132,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
   </div>
 
   
-  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; background: #1b1e21; border-top: 1px solid #3a4046; font-size: 12px; color: #9aa1a8; font-family: 'IBM Plex Mono', monospace">
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; background: #1b1e21; border-)DKUI",
+    R"DKUI(top: 1px solid #3a4046; font-size: 12px; color: #9aa1a8; font-family: 'IBM Plex Mono', monospace">
     <span>${v.footerTuner}</span>
     <span>${v.footerInfo}</span>
   </div>
@@ -1154,8 +1167,7 @@ class Component extends DCLogic {
     const pct = (t) => Math.round(t * 100) + '%';
     const lin = (lo, hi, d, u) => (t) => (lo + (hi - lo) * t).toFixed(d) + u;
     const sgn = (lo, hi, d, u) => (t) => { const v = lo + (hi - lo) * t; return (v > 0 ? '+' : '') + v.toFixed(d) + u; };
-    const notes = (t) => ['1/2', '1/4', '1/4.', '1/8', '1/8T', ')DKUI",
-    R"DKUI(1/16', '1/32'][Math.round(t * 6)];
+    const notes = (t) => ['1/2', '1/4', '1/4.', '1/8', '1/8T', '1/16', '1/32'][Math.round(t * 6)];
     const hz = (f) => f >= 1000 ? (f / 1000).toFixed(1) + ' kHz' : Math.round(f) + ' Hz';
     const logf = (lo, hi) => (t) => hz(lo * Math.pow(hi / lo, t));
     const semis = (t) => { const v = Math.round(-12 + 24 * t); return (v > 0 ? '+' : '') + v + ' st'; };
@@ -1261,7 +1273,8 @@ class Component extends DCLogic {
     const wt = get('wah_Pedal');
     wah.lid = 'transform: translateY(' + (wt * 14).toFixed(1) + 'px) scaleY(' + (1 - wt * 0.06).toFixed(3) + '); transform-origin: 58px 164px; transition: transform 60ms;';
     wah.inside = 'fill: ' + (on.wah ? '#5ee08a' : '#2f3440') + '; opacity: ' + (on.wah ? (0.25 + wt * 0.75).toFixed(2) : 1) + ';';
-    const pitch = mkPedal({ id: 'pitch', name: 'Pitch', mode: '\u00b112 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.42, semis], ['Mix', 1, pct]] });
+    const pitch = mkPedal({ id: 'pitch', name: 'P)DKUI",
+    R"DKUI(itch', mode: '\u00b112 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.42, semis], ['Mix', 1, pct]] });
     const shiftSt = Math.round(-12 + 24 * get('pitch_Shift'));
     const bellY = Math.round(-shiftSt * 3.1 + 14);
     Object.assign(pitch, { isStd: false, isPitchP: true, w: 160, h: 320, jy: 66, cardExtra: flatCard, stompCap: cap(on.pitch), tilt: -13, dx: -40, dy: 46,
@@ -1280,8 +1293,7 @@ class Component extends DCLogic {
       drive: [['#3a1414', '#5a1f1a', '#7a2c20', '#a8492e', '#9e5a3e', '#ff8a3d'], 'crows'],
       boost: [['#33300f', '#554f16', '#786f1e', '#a89a36', '#bcb060', '#f1d58a'], 'spire'],
       phaser: [['#3a2210', '#613614', '#874a18', '#b8682a', '#c48a54', '#ffb35c'], 'bats'],
-      chorus: [['#142a44',)DKUI",
-    R"DKUI( '#1d3f66', '#2a5684', '#4a7fae', '#6d97c0', '#e9e2d6'], 'notes'],
+      chorus: [['#142a44', '#1d3f66', '#2a5684', '#4a7fae', '#6d97c0', '#e9e2d6'], 'notes'],
       flanger: [['#102c3a', '#18465a', '#22607a', '#3a88a8', '#5ca6c0', '#9fe6ff'], 'web'],
       schorus: [['#1b2a3a', '#2a4a4a', '#386a62', '#4f9a86', '#6fb8a0', '#b8ffd9'], 'lanterns'],
       delay: [['#3a1630', '#5a1f4a', '#7a2a62', '#a84a8a', '#b86a9e', '#ffc2e8'], 'hourglass'],
@@ -1379,7 +1391,8 @@ class Component extends DCLogic {
     if (board.length) {
       // jack position on a pedal's side, following the pedal's rotation
       const jack = (q, right) => { const r0 = (q.rotDeg || 0) * Math.PI / 180, cx0 = q.x + q.w / 2, cy0 = q.y + q.h / 2, dx = (right ? q.w - 6 : 6) - q.w / 2, dy = q.jy - q.h / 2;
-        return [Math.round(cx0 + dx * Math.cos(r0) - dy * Math.sin(r0)), Math.round(cy0 + dx * Math.sin(r0) + dy * Math.cos(r0))]; };
+        return [Math.round(cx0 + dx * Math.cos(r0) - dy * Math.sin(r0)), Math.)DKUI",
+    R"DKUI(round(cy0 + dx * Math.sin(r0) + dy * Math.cos(r0))]; };
       const f = board[0], [fx0, fy0] = jack(f, false);
       if (view === 'gate') {
         // input comes from the jack on the reaper's scythe guitar (svg at 30,30, rotated -12deg about 130,235)
@@ -1400,8 +1413,7 @@ class Component extends DCLogic {
         const jx = 985, jy = 412;
         cables.push({ d: 'M' + (lx + 14) + ' ' + ly + ' C' + (lx + 80) + ' ' + (ly + 30) + ' ' + jx + ' ' + (jy - 110) + ' ' + jx + ' ' + (jy - 14), p1: plugH(lx, ly, 1), p2: 'M' + jx + ' ' + jy + ' L' + jx + ' ' + (jy - 14) });
       } else {
-        cables.push({ d: 'M' + (lx + 14) + ' ' + ly + ' C' + (lx + 70) + ' ' + (ly + 40) +)DKUI",
-    R"DKUI( ' 1010 ' + (ly + 10) + ' 1080 ' + (ly - 20), p1: plugH(lx, ly, 1), p2: 'M2000 0' });
+        cables.push({ d: 'M' + (lx + 14) + ' ' + ly + ' C' + (lx + 70) + ' ' + (ly + 40) + ' 1010 ' + (ly + 10) + ' 1080 ' + (ly - 20), p1: plugH(lx, ly, 1), p2: 'M2000 0' });
       }
     }
     const titles = { gate: 'Noise gate', wraith: 'Wraith', pedals: 'Pedals', fx: 'FX' };
@@ -1509,7 +1521,8 @@ class Component extends DCLogic {
       { k: 'hm', label: 'HIGH MID', def: 0.56, fmt: sgn(-12, 12, 1, ' dB'), f: () => 1600 },
       { k: 'hi', label: 'HIGH', def: 0.54, fmt: sgn(-12, 12, 1, ' dB'), f: () => 4000 },
       { k: 'hc', label: 'HIGH CUT', def: 0.6, fmt: logf(3000, 20000), f: (t) => 3000 * Math.pow(20000 / 3000, t) }
-    ];
+    ])DKUI",
+    R"DKUI(;
     eqDefs.forEach((e) => { defs[sk + 'eq_' + e.k] = e.def; });
     const ev = eqDefs.map((e) => get(sk + 'eq_' + e.k));
     const W = 560, H = 220, mid = 110, dbScale = 55 / 12;
@@ -1542,8 +1555,7 @@ class Component extends DCLogic {
       const id = sk + 'eq_' + e.k;
       const t = ev[i];
       const h = dragHandlers(id, e.def);
-      h.down = (ev2) => { ev2.preventDefault(); const r = ev2.currentTarget.getBoundingClientRect(); if (ev2.currentTarget.setPointerCapture) ev2.currentTarget.setPointerCapture(ev2.pointerId); this.drag = { id, rect: r }; setV(id, 1 - (e)DKUI",
-    R"DKUI(v2.clientY - r.top) / r.height); };
+      h.down = (ev2) => { ev2.preventDefault(); const r = ev2.currentTarget.getBoundingClientRect(); if (ev2.currentTarget.setPointerCapture) ev2.currentTarget.setPointerCapture(ev2.pointerId); this.drag = { id, rect: r }; setV(id, 1 - (ev2.clientY - r.top) / r.height); };
       h.move = (ev2) => { if (!this.drag || this.drag.id !== id) return; const r = this.drag.rect; setV(id, 1 - (ev2.clientY - r.top) / r.height); };
       return Object.assign({ label: e.label, value: e.fmt(t), aria: e.label + ' ' + e.fmt(t),
         handle: 'position: absolute; left: 0; width: 28px; height: 16px; border-radius: 8px 8px 2px 2px; background: #e9e2d6; border: 3px solid #0b0b0c; box-sizing: border-box; pointer-events: none; top: ' + Math.round((1 - t) * 146) + 'px;' }, h);
@@ -1625,7 +1637,18 @@ const DK = (() => {
   const gateToEngine = (t) => ((-90 + 70 * t) + 100) / 100;
   const gateFromEngine = (n) => clamp(((-100 + 100 * n) + 90) / 70);
 
-  const state = { model: '', ir: '', inLvl: 0, outLvl: 0, live: false };
+  const state = { model: '', ir: '', inLvl: 0, outLvl: 0, live: false, models: [], modelIdx: -1, irs: [], irIdx: -1 };
+
+  // Capture tone types (from the .nam file's metadata), in the order the plugin sorts them
+  const TYPES = [
+    { key: 'clean', label: 'CLEAN', color: '#6fbf73' },
+    { key: 'crunch', label: 'CRUNCH', color: '#e0b44a' },
+    { key: 'overdrive', label: 'DRIVE', color: '#e08a3a' },
+    { key: 'hi_gain', label: 'HIGH GAIN', color: '#e5484d' },
+    { key: 'fuzz', label: 'FUZZ', color: '#b06ad9' },
+    { key: '', label: 'OTHER', color: '#9aa1a8' }
+  ];
+  const typeOf = (key) => TYPES.find((t) => t.key === (key || '')) || TYPES[TYPES.length - 1];
   const sent = {}; // last normalized value sent for each param, to avoid echo loops
   let instance = null;
 
@@ -1689,10 +1712,16 @@ const DK = (() => {
       state.ir = msg.ir || '';
       (msg.params || []).forEach((n, idx) => applyParam(idx, n));
     } else if (msg.type === 'param') {
-      applyParam(msg.idx, msg.value);
+      applyParam(msg.idx, m)DKUI",
+    R"DKUI(sg.value);
     } else if (msg.type === 'files') {
       state.model = msg.model || '';
       state.ir = msg.ir || '';
+      if (typeof msg.modelIdx === 'number') state.modelIdx = msg.modelIdx;
+      if (typeof msg.irIdx === 'number') state.irIdx = msg.irIdx;
+    } else if (msg.type === 'modelList' || msg.type === 'irList') {
+      const key = msg.type === 'modelList' ? 'models' : 'irs';
+      state[key] = (msg.reset ? [] : state[key]).concat(msg.items || []);
     } else if (msg.type === 'meters') {
       state.inLvl = msg.in || 0;
       state.outLvl = msg.out || 0;
@@ -1734,8 +1763,38 @@ const DK = (() => {
         modelText: state.model ? baseName(state.model) : (plugin ? 'No capture loaded. Click "Load capture\u2026" and pick a .nam file from Tone3000.' : '[capture file].nam \u00b7 Capture by [CREATOR NAME] on Tone3000 \u00b7 CC BY'),
         irText: state.ir ? baseName(state.ir) : (plugin ? 'No IR loaded. Click "Load IR\u2026" and pick a cab .wav file.' : (v.cabCur && v.cabCur.ir) || ''),
         loadModel: () => send({ type: 'loadModel' }),
-        loadIR: () => send({ type: 'loadIR' })
+        loadIR: () => send({ type: 'loadIR' }),
+        prevModel: () => send({ type: 'stepModel', dir: -1 }),
+        nextModel: () => send({ type: 'stepModel', dir: 1 }),
+        prevIR: () => send({ type: 'stepIR', dir: -1 }),
+        nextIR: () => send({ type: 'stepIR', dir: 1 }),
+        modelType: '', modelTypeStyle: '', modelPos: '', modelTypes: [], hasTypes: false
       };
+      const cur = state.models[state.modelIdx];
+      if (state.model && cur) {
+        const t = typeOf(cur.t);
+        v.engine.modelType = '\u00b7 ' + t.label;
+        v.engine.modelTypeStyle = 'color: ' + t.color + '; font-weight: 500';
+        v.engine.modelPos = '\u00b7 ' + (state.modelIdx + 1) + ' / ' + state.models.length;
+        v.engine.modelText = cur.n;
+      }
+      if (state.models.length > 1) {
+        const present = TYPES.filter((t) => state.models.some((m) => (m.t || '') === t.key));
+        v.engine.hasTypes = present.length > 1;
+        v.engine.modelTypes = present.map((t) => {
+          const count = state.models.filter((m) => (m.t || '') === t.key).length;
+          const active = cur && (cur.t || '') === t.key;
+          return {
+            label: t.label + ' ' + count,
+            style: 'height: 26px; padding: 0 10px; border-radius: 13px; border: 2px solid #0b0b0c; font-family: \'IBM Plex Mono\', monospace; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; '
+              + (active ? 'background: ' + t.color + '; color: #0b0b0c;' : 'background: #15171b; color: ' + t.color + ';'),
+            pick: () => send({ type: 'pickModel', index: state.models.findIndex((m) => (m.t || '') === t.key) })
+          };
+        });
+      }
+      if (state.ir && state.irs.length && state.irIdx >= 0) {
+        v.engine.irText = state.irs[state.irIdx].n + '  \u00b7 ' + (state.irIdx + 1) + ' / ' + state.irs.length;
+      }
       if (state.live && v.meters) {
         const i = lvl(state.inLvl), o = lvl(state.outLvl);
         v.meters = Object.assign({}, v.meters, { inL: bar(i), inR: bar(i), outL: bar(o), outR: bar(o) });
@@ -1749,8 +1808,7 @@ const DK = (() => {
   return api;
 })();
 
-  const props = {})DKUI",
-    R"DKUI(;
+  const props = {};
   for (const k in DC_PROPS) if (k[0] !== '$' && 'default' in DC_PROPS[k]) props[k] = DC_PROPS[k].default;
   preact.render(preact.h(DK.wrap(Component), props), document.getElementById('app'));
 })();

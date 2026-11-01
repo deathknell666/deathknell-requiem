@@ -434,7 +434,11 @@ void NeuralAmpModeler::OnIdle()
   if (mWebView && mWebReady)
   {
     if (mWebFilesDirty.exchange(false))
+    {
+      _RefreshFileLists(mWebForceRescan);
+      mWebForceRescan = false;
       _SendFilesToWeb();
+    }
     const float inPeak = mWebInPeak.exchange(0.0f);
     const float outPeak = mWebOutPeak.exchange(0.0f);
     std::stringstream ss;
@@ -1076,7 +1080,211 @@ void NeuralAmpModeler::_SendFilesToWeb()
   j["type"] = "files";
   j["model"] = std::string(mNAMPath.Get());
   j["ir"] = std::string(mIRPath.Get());
+  int modelIdx = -1, irIdx = -1;
+  for (size_t i = 0; i < mModelList.size(); i++)
+    if (mModelList[i].path == mNAMPath.Get())
+      modelIdx = (int)i;
+  for (size_t i = 0; i < mIRList.size(); i++)
+    if (mIRList[i].path == mIRPath.Get())
+      irIdx = (int)i;
+  j["modelIdx"] = modelIdx;
+  j["irIdx"] = irIdx;
   _SendToWeb(j.dump());
+}
+
+namespace
+{
+std::string _DKLower(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+  return s;
+}
+
+// Read the capture's tone type from the .nam file's metadata (it sits near the start of the file).
+// Falls back to guessing from the file name.
+std::string _DKCaptureType(const std::filesystem::path& file, const std::string& name)
+{
+  std::string head;
+  {
+    std::ifstream f(file, std::ios::binary);
+    head.resize(32768);
+    f.read(&head[0], (std::streamsize)head.size());
+    head.resize((size_t)f.gcount());
+  }
+  std::string type;
+  const auto key = head.find("\"tone_type\"");
+  if (key != std::string::npos)
+  {
+    const auto colon = head.find(':', key);
+    if (colon != std::string::npos)
+    {
+      const auto q1 = head.find('"', colon);
+      const auto nl = head.find_first_of(",}", colon);
+      if (q1 != std::string::npos && (nl == std::string::npos || q1 < nl))
+      {
+        const auto q2 = head.find('"', q1 + 1);
+        if (q2 != std::string::npos)
+          type = _DKLower(head.substr(q1 + 1, q2 - q1 - 1));
+      }
+    }
+  }
+  if (type == "clean" || type == "crunch" || type == "overdrive" || type == "hi_gain" || type == "fuzz")
+    return type;
+  const std::string n = _DKLower(name);
+  if (n.find("fuzz") != std::string::npos)
+    return "fuzz";
+  if (n.find("clean") != std::string::npos)
+    return "clean";
+  if (n.find("crunch") != std::string::npos || n.find("edge") != std::string::npos)
+    return "crunch";
+  if (n.find("hi gain") != std::string::npos || n.find("high gain") != std::string::npos || n.find("hi-gain") != std::string::npos
+      || n.find("higain") != std::string::npos || n.find("lead") != std::string::npos || n.find("metal") != std::string::npos
+      || n.find("djent") != std::string::npos)
+    return "hi_gain";
+  if (n.find("drive") != std::string::npos || n.find(" od") != std::string::npos || n.find("dirt") != std::string::npos
+      || n.find("rhythm") != std::string::npos)
+    return "overdrive";
+  return "";
+}
+
+int _DKTypeRank(const std::string& t)
+{
+  if (t == "clean")
+    return 0;
+  if (t == "crunch")
+    return 1;
+  if (t == "overdrive")
+    return 2;
+  if (t == "hi_gain")
+    return 3;
+  if (t == "fuzz")
+    return 4;
+  return 5;
+}
+
+std::vector<NeuralAmpModeler::DKFile> _DKScanFolder(const std::filesystem::path& dir, bool isModel)
+{
+  std::vector<NeuralAmpModeler::DKFile> out;
+  std::error_code ec;
+  for (const auto& entry : std::filesystem::directory_iterator(dir, ec))
+  {
+    if (!entry.is_regular_file(ec))
+      continue;
+    const std::string ext = _DKLower(entry.path().extension().u8string());
+    if (ext != (isModel ? ".nam" : ".wav"))
+      continue;
+    NeuralAmpModeler::DKFile f;
+    f.path = entry.path().u8string();
+    f.name = entry.path().stem().u8string();
+    if (isModel)
+      f.type = _DKCaptureType(entry.path(), f.name);
+    out.push_back(f);
+  }
+  std::sort(out.begin(), out.end(), [](const NeuralAmpModeler::DKFile& a, const NeuralAmpModeler::DKFile& b) {
+    const int ra = _DKTypeRank(a.type), rb = _DKTypeRank(b.type);
+    if (ra != rb)
+      return ra < rb;
+    return _DKLower(a.name) < _DKLower(b.name);
+  });
+  return out;
+}
+} // namespace
+
+void NeuralAmpModeler::_RefreshFileLists(bool force)
+{
+  for (int k = 0; k < 2; k++)
+  {
+    const bool isModel = k == 0;
+    const WDL_String& current = isModel ? mNAMPath : mIRPath;
+    auto& list = isModel ? mModelList : mIRList;
+    auto& listDir = isModel ? mModelListDir : mIRListDir;
+    if (!current.GetLength())
+      continue;
+    const auto dir = std::filesystem::u8path(current.Get()).parent_path();
+    const std::string dirStr = dir.u8string();
+    if (!force && dirStr == listDir)
+      continue;
+    list = _DKScanFolder(dir, isModel);
+    listDir = dirStr;
+    _SendFileListToWeb(isModel);
+  }
+}
+
+void NeuralAmpModeler::_SendFileListToWeb(bool isModel)
+{
+  // Sent in small batches: Windows' web view only takes short scripts.
+  const auto& list = isModel ? mModelList : mIRList;
+  const char* msgType = isModel ? "modelList" : "irList";
+  nlohmann::json batch = nlohmann::json::array();
+  size_t batchChars = 0;
+  bool first = true;
+  auto flush = [&](bool last) {
+    nlohmann::json j;
+    j["type"] = msgType;
+    j["reset"] = first;
+    j["items"] = batch;
+    _SendToWeb(j.dump());
+    first = false;
+    batch = nlohmann::json::array();
+    batchChars = 0;
+  };
+  for (const auto& f : list)
+  {
+    nlohmann::json item;
+    item["n"] = f.name;
+    item["t"] = f.type;
+    const size_t len = item.dump().size();
+    if (batchChars + len > 1500 && batch.size())
+      flush(false);
+    batch.push_back(item);
+    batchChars += len;
+  }
+  flush(true);
+}
+
+void NeuralAmpModeler::_PickFile(bool isModel, int index)
+{
+  const auto& list = isModel ? mModelList : mIRList;
+  if (index < 0 || index >= (int)list.size())
+    return;
+  const WDL_String path(list[index].path.c_str());
+  if (isModel)
+  {
+    const std::string msg = _StageModel(path);
+    if (msg.size())
+    {
+      std::stringstream ss;
+      ss << "Failed to load NAM model. Message:\n\n" << msg;
+      _ShowMessageBox(GetUI(), ss.str().c_str(), "Failed to load model!", kMB_OK);
+    }
+  }
+  else
+  {
+    const dsp::wav::LoadReturnCode retCode = _StageIR(path);
+    if (retCode != dsp::wav::LoadReturnCode::SUCCESS)
+    {
+      std::stringstream message;
+      message << "Failed to load IR file " << path.Get() << ":\n" << dsp::wav::GetMsgForLoadReturnCode(retCode);
+      _ShowMessageBox(GetUI(), message.str().c_str(), "Failed to load IR!", kMB_OK);
+    }
+  }
+  mWebFilesDirty = true;
+}
+
+void NeuralAmpModeler::_StepFile(bool isModel, int delta)
+{
+  _RefreshFileLists(false);
+  const auto& list = isModel ? mModelList : mIRList;
+  if (list.empty())
+    return;
+  const std::string current = isModel ? mNAMPath.Get() : mIRPath.Get();
+  int idx = -1;
+  for (size_t i = 0; i < list.size(); i++)
+    if (list[i].path == current)
+      idx = (int)i;
+  const int n = (int)list.size();
+  idx = idx < 0 ? 0 : ((idx + (delta >= 0 ? 1 : -1)) % n + n) % n;
+  _PickFile(isModel, idx);
 }
 
 void NeuralAmpModeler::_SendFullStateToWeb()
@@ -1111,6 +1319,10 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
   {
     mWebReady = true;
     _SendFullStateToWeb();
+    _RefreshFileLists(false);
+    _SendFileListToWeb(true);
+    _SendFileListToWeb(false);
+    _SendFilesToWeb();
   }
   else if (type == "param")
   {
@@ -1122,6 +1334,14 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
       SendParameterValueFromUI(idx, value);
       EndInformHostOfParamChangeFromUI(idx);
     }
+  }
+  else if (type == "stepModel" || type == "stepIR")
+  {
+    _StepFile(type == "stepModel", j.value("dir", 1));
+  }
+  else if (type == "pickModel" || type == "pickIR")
+  {
+    _PickFile(type == "pickModel", j.value("index", -1));
   }
   else if (type == "loadModel" || type == "loadIR")
   {
@@ -1160,6 +1380,7 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
             _ShowMessageBox(GetUI(), message.str().c_str(), "Failed to load IR!", kMB_OK);
           }
         }
+        mWebForceRescan = true;
         mWebFilesDirty = true;
       });
   }

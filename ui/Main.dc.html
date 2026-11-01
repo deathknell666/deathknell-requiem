@@ -857,11 +857,21 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
         <div style="{{ampPlate}}">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px">
             <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 6px 12px; background: #15171b; border: 3px solid #0b0b0c; border-radius: 5px">
-              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8">AMP CAPTURE (.NAM)</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8">AMP CAPTURE (.NAM) <span style="{{engine.modelTypeStyle}}">{{engine.modelType}}</span> <span style="color: #6f767e">{{engine.modelPos}}</span></span>
               <span style="font-size: 13px; color: #e9e2d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{engine.modelText}}</span>
             </div>
+            <button onClick="{{engine.prevModel}}" aria-label="Previous capture in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">&lsaquo;</button>
+            <button onClick="{{engine.nextModel}}" aria-label="Next capture in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">&rsaquo;</button>
             <button onClick="{{engine.loadModel}}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; flex-shrink: 0">Load capture…</button>
           </div>
+          <sc-if value="{{engine.hasTypes}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #15171b">JUMP TO</span>
+              <sc-for list="{{engine.modelTypes}}" as="t" hint-placeholder-count="4">
+                <button onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+              </sc-for>
+            </div>
+          </sc-if>
           <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
             <sc-for list="{{ampKnobs}}" as="k" hint-placeholder-count="6">
               <button onPointerDown="{{k.down}}" onPointerMove="{{k.move}}" onPointerUp="{{k.up}}" onPointerCancel="{{k.up}}" onDoubleClick="{{k.reset}}" onKeyDown="{{k.key}}" onWheel="{{k.wheel}}" aria-label="{{k.aria}}" style="background: none; border: 0; padding: 0; color: #15171b; touch-action: none; cursor: ns-resize; display: flex; flex-direction: column; align-items: center; gap: 3px">
@@ -925,6 +935,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
             <span style="font-family: 'Cinzel', Georgia, serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: #15171b">IMPULSE RESPONSE</span>
             <div style="display: flex; gap: 10px; align-items: center">
               <div style="flex-grow: 1; min-width: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 10px 12px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{engine.irText}}</div>
+              <button onClick="{{engine.prevIR}}" aria-label="Previous IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">&lsaquo;</button>
+              <button onClick="{{engine.nextIR}}" aria-label="Next IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">&rsaquo;</button>
               <button onClick="{{engine.loadIR}}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; flex-shrink: 0">Load IR…</button>
             </div>
           </div>
