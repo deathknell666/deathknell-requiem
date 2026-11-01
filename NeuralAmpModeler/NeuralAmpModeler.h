@@ -10,6 +10,7 @@
 
 #include "Colors.h"
 #include "ToneStack.h"
+#include "DKEffects.h"
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "ISender.h"
@@ -58,7 +59,10 @@ enum EParams
   // Deathknell Requiem: Wraith chopper (rhythmic on/off, synced to the host tempo)
   kChopActive,
   kChopRate,
-  kNumParams
+  // Deathknell Requiem: every other pedal, the EQ and the FX (one parameter per row of
+  // dk::kDKParams in DKEffects.h)
+  kDKFirst,
+  kNumParams = kDKFirst + dk::kNumDKParams
 };
 
 const int numKnobs = 6;
@@ -368,6 +372,10 @@ private:
   double mChopPhase = 0.0; // 0..1 through one step
   double mChopGain = 1.0; // smoothed gain, so the cuts don't click
   bool mChopWasActive = false;
+  // Pedals, EQ and FX (DKEffects.h)
+  dk::FxChain mDK;
+  std::vector<iplug::sample> mDKPre, mDKCab, mDKL, mDKR;
+  iplug::sample* mDKPrePtr[1] = {nullptr};
   void _ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames);
   float mDKWindowScale = 1.0f; // Small / Medium / Large window, picked from the GUI's right-click menu
 };

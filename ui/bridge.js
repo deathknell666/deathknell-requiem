@@ -8,6 +8,11 @@ const DK = (() => {
   // Engine parameter indices (must match EParams in NeuralAmpModeler.h)
   const P = { input: 0, gateThreshold: 1, bass: 2, mid: 3, treble: 4, output: 5, gateActive: 6, eqActive: 7, irOn: 8, chopActive: 13, chopRate: 14 };
 
+  // Pedals, EQ and FX: [gui key, default, type (0 knob, 1 switch, 2 three-way), scope (0 on, 1 vals, 2 per amp slot, 3 state)].
+  // Filled in by tools/build_ui.py from kDKParams in NeuralAmpModeler/DKEffects.h; engine index = DK_FIRST + row.
+  const DKP = /*DK_PARAMS*/[];
+  const DK_FIRST = P.chopRate + 1;
+
   const clamp = (x) => Math.max(0, Math.min(1, x));
   const baseName = (path) => (path || '').split(/[\\/]/).pop();
 
@@ -68,6 +73,17 @@ const DK = (() => {
     // Wraith chopper: CHOP footswitch (held) and the Speed knob (note value, 7 steps)
     sendParam(P.chopActive, st.wHeld && st.wHeld.chop ? 1 : 0);
     sendParam(P.chopRate, Math.round(val('wr_Speed', 0.84) * 6) / 6);
+    // every pedal, the EQ and the FX
+    DKP.forEach(([key, def, type, scope], i) => {
+      let g;
+      if (scope === 0) g = on[key] === undefined ? def : (on[key] ? 1 : 0);
+      else if (scope === 1) g = val(key, def);
+      else if (scope === 2) g = val(sk + key, def);
+      else g = st[key] ?? def;
+      if (type === 1) g = g ? 1 : 0;
+      else if (type === 2) g = Math.max(0, Math.min(2, Math.round(g))) / 2;
+      sendParam(DK_FIRST + i, g);
+    });
   };
 
   // Apply an engine parameter (from the host, automation or a preset) to the GUI state.
@@ -89,6 +105,13 @@ const DK = (() => {
       else if (idx === P.irOn) on.cab = n >= 0.5;
       else if (idx === P.chopRate) vals.wr_Speed = n;
       else if (idx === P.chopActive) return { wHeld: Object.assign({}, s.wHeld || {}, { chop: n >= 0.5 }) };
+      else if (idx >= DK_FIRST && idx < DK_FIRST + DKP.length) {
+        const [key, , type, scope] = DKP[idx - DK_FIRST];
+        if (scope === 0) on[key] = n >= 0.5;
+        else if (scope === 1) vals[key] = n;
+        else if (scope === 2) vals[sk + key] = n;
+        else return { [key]: type === 2 ? Math.round(n * 2) : n };
+      }
       else return null;
       return { vals, on };
     });

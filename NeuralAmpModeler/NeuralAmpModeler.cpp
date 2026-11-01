@@ -104,6 +104,17 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kSlim)->InitDouble("Slim", 0.0, 0.0, 1.0, 0.01);
   GetParam(kChopActive)->InitBool("Chop", false);
   GetParam(kChopRate)->InitEnum("Chop rate", 5, {"1/2", "1/4", "1/4.", "1/8", "1/8T", "1/16", "1/32"});
+  for (int i = 0; i < dk::kNumDKParams; i++)
+  {
+    const dk::DKParamDef& d = dk::kDKParams[i];
+    if (d.type == dk::kSwitch)
+      GetParam(kDKFirst + i)->InitBool(d.name, d.def > 0.5);
+    else if (d.type == dk::kChoice3)
+      GetParam(kDKFirst + i)->InitEnum(d.name, (int)d.def, {"+1", "+2", "Both"});
+    else
+      GetParam(kDKFirst + i)->InitDouble(d.name, d.def, 0.0, 1.0, 0.001);
+  }
+  mDK.Reset(48000.0);
 
   mNoiseGateTrigger.AddListener(&mNoiseGateGain);
 
@@ -357,29 +368,52 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   const bool noiseGateActive = GetParam(kNoiseGateActive)->Value();
   const bool toneStackActive = GetParam(kEQActive)->Value();
 
+  // Pedals, EQ and FX settings for this block
+  {
+    double dkValues[dk::kNumDKParams];
+    for (int i = 0; i < dk::kNumDKParams; i++)
+      dkValues[i] = GetParam(kDKFirst + i)->Value();
+    mDK.SetParams(dkValues, GetTempo(), GetParam(kChopActive)->Bool());
+  }
+  if (mDKPre.size() < numFrames)
+  {
+    mDKPre.resize(numFrames);
+    mDKCab.resize(numFrames);
+    mDKL.resize(numFrames);
+    mDKR.resize(numFrames);
+  }
+
   // Noise gate trigger
   sample** triggerOutput = mInputPointers;
   if (noiseGateActive)
   {
+    // The gate's SOFT/HARD switch: hard snaps shut, soft fades out more slowly
+    const bool gateHard = GetParam(kDKFirst + dk::pGateHard)->Bool();
     const double time = 0.01;
     const double threshold = GetParam(kNoiseGateThreshold)->Value(); // GetParam...
     const double ratio = 0.1; // Quadratic...
-    const double openTime = 0.005;
-    const double holdTime = 0.01;
-    const double closeTime = 0.05;
+    const double openTime = gateHard ? 0.005 : 0.02;
+    const double holdTime = gateHard ? 0.01 : 0.05;
+    const double closeTime = gateHard ? 0.05 : 0.3;
     const dsp::noise_gate::TriggerParams triggerParams(time, threshold, ratio, openTime, holdTime, closeTime);
     mNoiseGateTrigger.SetParams(triggerParams);
     mNoiseGateTrigger.SetSampleRate(sampleRate);
     triggerOutput = mNoiseGateTrigger.Process(mInputPointers, numChannelsInternal, numFrames);
   }
 
+  // Pitch, wah, Wraith fuzz and the pedals, before the amp
+  std::copy(triggerOutput[0], triggerOutput[0] + numFrames, mDKPre.begin());
+  mDK.ProcessPre(mDKPre.data(), numFrames);
+  mDKPrePtr[0] = mDKPre.data();
+  sample** ampInput = mDKPrePtr;
+
   if (mModel != nullptr)
   {
-    mModel->process(triggerOutput, mOutputPointers, nFrames);
+    mModel->process(ampInput, mOutputPointers, nFrames);
   }
   else
   {
-    _FallbackDSP(triggerOutput, mOutputPointers, numChannelsInternal, numFrames);
+    _FallbackDSP(ampInput, mOutputPointers, numChannelsInternal, numFrames);
   }
   // Apply the noise gate after the NAM
   sample** gateGainOutput =
@@ -393,28 +427,41 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
                                     : gateGainOutput;
 
   sample** irPointers = toneStackOutPointers;
-  if (mIR != nullptr && GetParam(kIRToggle)->Value())
+  const bool irOn = mIR != nullptr && GetParam(kIRToggle)->Value();
+  if (irOn)
     irPointers = mIR->Process(toneStackOutPointers, numChannelsInternal, numFrames);
+  // Cab mix (cab vs. straight amp) and cab level
+  mDK.ProcessCab(toneStackOutPointers[0], irPointers[0], mDKCab.data(), numFrames, irOn);
+  sample* cabPtr[1] = {mDKCab.data()};
 
   // And the HPF for DC offset (Issue 271)
   const double highPassCutoffFreq = kDCBlockerFrequency;
-  // const double lowPassCutoffFreq = 20000.0;
   const recursive_linear_filter::HighPassParams highPassParams(sampleRate, highPassCutoffFreq);
-  // const recursive_linear_filter::LowPassParams lowPassParams(sampleRate, lowPassCutoffFreq);
   mHighPass.SetParams(highPassParams);
-  // mLowPass.SetParams(lowPassParams);
-  sample** hpfPointers = mHighPass.Process(irPointers, numChannelsInternal, numFrames);
-  // sample** lpfPointers = mLowPass.Process(hpfPointers, numChannelsInternal, numFrames);
+  sample** hpfPointers = mHighPass.Process(cabPtr, numChannelsInternal, numFrames);
+
+  // EQ, presence, doubler, room, stereo chorus, delay, reverb and FX volume -> stereo
+  mDK.ProcessPost(hpfPointers[0], mDKL.data(), mDKR.data(), numFrames);
 
   // restore previous floating point state
   std::feupdateenv(&fe_state);
 
-  // Let's get outta here
-  // This is where we exit mono for whatever the output requires.
-  _ProcessOutput(hpfPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
-  // _ProcessOutput(lpfPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
-  // * Output of input leveling (inputs -> mInputPointers),
-  // * Output of output leveling (mOutputPointers -> outputs)
+  // Out to the host: left and right (a mono output gets both mixed)
+  {
+    const double gain = mOutputGain;
+    for (size_t c = 0; c < numChannelsExternalOut; c++)
+    {
+      for (size_t s = 0; s < numFrames; s++)
+      {
+        double v = numChannelsExternalOut == 1 ? 0.5 * (mDKL[s] + mDKR[s]) : (c % 2 == 0 ? mDKL[s] : mDKR[s]);
+        v *= gain;
+#ifdef APP_API // Ensure valid output to interface
+        v = std::clamp(v, -1.0, 1.0);
+#endif
+        outputs[c][s] = (sample)v;
+      }
+    }
+  }
   _UpdateMeters(mInputPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
 }
 
@@ -427,7 +474,13 @@ void NeuralAmpModeler::OnReset()
   // 10 cycles should be enough to pass the VST3 tests checking tail behavior.
   // I'm ignoring the model & IR, but it's not the end of the world.
   const int tailCycles = 10;
-  SetTailSize(tailCycles * (int)(sampleRate / kDCBlockerFrequency));
+  // The delay and reverb ring on for a few seconds after the input stops.
+  SetTailSize(std::max(tailCycles * (int)(sampleRate / kDCBlockerFrequency), (int)(6.0 * sampleRate)));
+  mDK.Reset(sampleRate);
+  mDKPre.assign((size_t)std::max(maxBlockSize, 1), 0.0);
+  mDKCab.assign(mDKPre.size(), 0.0);
+  mDKL.assign(mDKPre.size(), 0.0);
+  mDKR.assign(mDKPre.size(), 0.0);
   mInputSender.Reset(sampleRate);
   mOutputSender.Reset(sampleRate);
   // If there is a model or IR loaded, they need to be checked for resampling.
@@ -1368,7 +1421,7 @@ void NeuralAmpModeler::_SendFullStateToWeb()
   j["ir"] = std::string(mIRPath.Get());
   std::vector<double> params;
   for (int i = 0; i < kNumParams; i++)
-    params.push_back(GetParam(i)->GetNormalized());
+    params.push_back(std::round(GetParam(i)->GetNormalized() * 10000.0) / 10000.0); // short, to fit the message
   j["params"] = params;
   _SendToWeb(j.dump());
 }

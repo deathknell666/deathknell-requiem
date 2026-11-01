@@ -1119,7 +1119,7 @@ class Component extends DCLogic {
     const vals = st.vals || {};
     const view = st.view || 'gate';
     const slotIdx = st.slot ?? 2;
-    const on = Object.assign({ gate: true, wah: false, comp: true, drive: true, boost: false, phaser: false, chorus: false, flanger: false, pitch: false, wfuzz: true, woct: false, wchop: true, schorus: false, doubler: true, delay: true, reverb: true, cab: true }, st.on || {});
+    const on = Object.assign({ gate: true, wah: false, comp: false, drive: false, boost: false, phaser: false, chorus: false, flanger: false, pitch: false, wfuzz: true, woct: false, wchop: true, schorus: false, doubler: false, delay: false, reverb: false, cab: true }, st.on || {});
     const opt = Object.assign({ os: '2x', level: 'Instrument', sync: 'Host', ref: '440', mute: 'On', ui: '100%', drag: 'Vertical', midi: 'Omni' }, st.opt || {});
     const toggle = (id) => () => this.setState({ on: Object.assign({}, on, { [id]: !on[id] }) });
     const clamp = (t) => Math.max(0, Math.min(1, t));
@@ -1238,7 +1238,7 @@ class Component extends DCLogic {
     const wt = get('wah_Pedal');
     wah.lid = 'transform: translateY(' + (wt * 14).toFixed(1) + 'px) scaleY(' + (1 - wt * 0.06).toFixed(3) + '); transform-origin: 58px 164px; transition: transform 60ms;';
     wah.inside = 'fill: ' + (on.wah ? '#5ee08a' : '#2f3440') + '; opacity: ' + (on.wah ? (0.25 + wt * 0.75).toFixed(2) : 1) + ';';
-    const pitch = mkPedal({ id: 'pitch', name: 'Pitch', mode: '±12 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.42, semis], ['Mix', 1, pct]] });
+    const pitch = mkPedal({ id: 'pitch', name: 'Pitch', mode: '±12 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.5, semis], ['Mix', 1, pct]] });
     const shiftSt = Math.round(-12 + 24 * get('pitch_Shift'));
     const bellY = Math.round(-shiftSt * 3.1 + 14);
     Object.assign(pitch, { isStd: false, isPitchP: true, w: 160, h: 320, jy: 66, cardExtra: flatCard, stompCap: cap(on.pitch), tilt: -13, dx: -40, dy: 46,
@@ -1398,7 +1398,7 @@ class Component extends DCLogic {
       splitL: on.doubler ? 'M8 10 C12 10 14 3 24 3' : 'M8 10 H24', splitR: on.doubler ? 'M8 10 C' + (12 + dOff) + ' 10 ' + (14 + dOff) + ' 17 24 17' : 'M8 10 H24',
       btn: 'height: 30px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; ' + (on.doubler ? 'background: ' + accent + '; color: #1b1e21; border: 1px solid ' + accent + ';' : 'background: #2e3338; color: #c9ced3; border: 1px solid #4a5158;'),
       led: 'width: 7px; height: 7px; border-radius: 50%; background: ' + (on.doubler ? '#ff4b3e; box-shadow: 0 0 6px 2px rgba(255,75,62,0.7)' : '#3a2020') + ';' };
-    const fxVol = K('fx_Volume', 'FX volume', 0.8, (t) => t < 0.01 ? '-inf dB' : sgn(-36, 6, 1, ' dB')(t));
+    const fxVol = K('fx_Volume', 'FX volume', 0.857, (t) => t < 0.01 ? '-inf dB' : sgn(-36, 6, 1, ' dB')(t));
     const volT = get('fx_Volume');
     const mixLvl = view === 'fx' ? Math.round((0.15 + 0.4 * noise(7)) * 10 * volT * 1.25) : 0;
     const mixerLeds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => ({ style: 'width: 10px; height: 6px; border-radius: 1px; background: ' + (i < mixLvl ? (i > 7 ? '#ff4b3e' : i > 5 ? '#e0b44a' : '#5ee08a') : '#1b1e21') + ';' }));
@@ -1473,17 +1473,17 @@ class Component extends DCLogic {
       K(sk + 'in', 'INPUT', 0.5, sgn(-12, 12, 1, ' dB')), K(sk + 'bass', 'BASS', 0.45, tenth), K(sk + 'mid', 'MID', 0.6, tenth),
       K(sk + 'treble', 'TREBLE', 0.55, tenth), K(sk + 'pres', 'PRESENCE', 0.5, tenth), K(sk + 'out', 'OUTPUT', 0.6, sgn(-24, 12, 1, ' dB'))
     ];
-    const cabKnobs = [K('c_mix', 'MIX', 1, pct), K('c_lvl', 'LEVEL', 0.5, sgn(-12, 12, 1, ' dB')), K('c_room', 'ROOM', 0.12, pct)];
+    const cabKnobs = [K('c_mix', 'MIX', 1, pct), K('c_lvl', 'LEVEL', 0.5, sgn(-12, 12, 1, ' dB')), K('c_room', 'ROOM', 0, pct)];
 
     // EQ: 6 bands per amp slot
     const gain = (t) => (t - 0.5) * 24;
     const eqDefs = [
-      { k: 'lc', label: 'LOW CUT', def: 0.45, fmt: logf(20, 300), f: (t) => 20 * Math.pow(15, t) },
-      { k: 'lo', label: 'LOW', def: 0.58, fmt: sgn(-12, 12, 1, ' dB'), f: () => 120 },
-      { k: 'lm', label: 'LOW MID', def: 0.38, fmt: sgn(-12, 12, 1, ' dB'), f: () => 400 },
-      { k: 'hm', label: 'HIGH MID', def: 0.56, fmt: sgn(-12, 12, 1, ' dB'), f: () => 1600 },
-      { k: 'hi', label: 'HIGH', def: 0.54, fmt: sgn(-12, 12, 1, ' dB'), f: () => 4000 },
-      { k: 'hc', label: 'HIGH CUT', def: 0.6, fmt: logf(3000, 20000), f: (t) => 3000 * Math.pow(20000 / 3000, t) }
+      { k: 'lc', label: 'LOW CUT', def: 0, fmt: logf(20, 300), f: (t) => 20 * Math.pow(15, t) },
+      { k: 'lo', label: 'LOW', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 120 },
+      { k: 'lm', label: 'LOW MID', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 400 },
+      { k: 'hm', label: 'HIGH MID', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 1600 },
+      { k: 'hi', label: 'HIGH', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 4000 },
+      { k: 'hc', label: 'HIGH CUT', def: 1, fmt: logf(3000, 20000), f: (t) => 3000 * Math.pow(20000 / 3000, t) }
     ];
     eqDefs.forEach((e) => { defs[sk + 'eq_' + e.k] = e.def; });
     const ev = eqDefs.map((e) => get(sk + 'eq_' + e.k));

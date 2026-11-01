@@ -13,6 +13,7 @@ Output:
 Run:  python3 tools/build_ui.py
 """
 import html as htmlmod
+import json
 import os
 import re
 import sys
@@ -26,6 +27,23 @@ OUT_HDR = os.path.join(ROOT, "NeuralAmpModeler", "DKRequiemUI.h")
 
 TOKEN = re.compile(r"<sc-(for|if)\b([^>]*)>|</sc-(for|if)>|\{\{\s*([^}]*?)\s*\}\}")
 IDENT = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*(\.[A-Za-z_$][A-Za-z0-9_$]*)*$")
+
+
+DK_FX = os.path.join(ROOT, "NeuralAmpModeler", "DKEffects.h")
+DK_ROW = re.compile(r'^\s*\{"([^"]+)", "([^"]+)", ([0-9.]+), (kKnob|kSwitch|kChoice3), (kOn|kVal|kSlot|kState)\},\s*$', re.M)
+
+
+def dk_params():
+    # The rows of kDKParams in DKEffects.h: which GUI value drives which engine parameter.
+    src = open(DK_FX, encoding="utf-8").read()
+    table = src[src.index("kDKParams[] = {"):src.index("};", src.index("kDKParams[] = {"))]
+    types = {"kKnob": 0, "kSwitch": 1, "kChoice3": 2}
+    scopes = {"kOn": 0, "kVal": 1, "kSlot": 2, "kState": 3}
+    rows = [[m.group(1), float(m.group(3)), types[m.group(4)], scopes[m.group(5)]] for m in DK_ROW.finditer(table)]
+    n_rows = table.count("{\"")
+    if len(rows) != n_rows:
+        sys.exit("build_ui.py: could not read every row of kDKParams in DKEffects.h (%d of %d)" % (len(rows), n_rows))
+    return rows
 
 
 def attr(s, name):
@@ -127,6 +145,7 @@ def main():
     preact = open(os.path.join(VENDOR, "preact.min.umd.js"), encoding="utf-8").read()
     htm = open(os.path.join(VENDOR, "htm.umd.js"), encoding="utf-8").read()
     bridge = open(BRIDGE, encoding="utf-8").read()
+    bridge = bridge.replace("/*DK_PARAMS*/[]", json.dumps(dk_params()))
 
     page = """<!doctype html>
 <html lang="en">
