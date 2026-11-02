@@ -2,7 +2,8 @@
 //
 // Everything around the amp capture that isn't NAM itself:
 //   before the amp:  Pitch (whammy) > Wah > Wraith octave fuzz > Comp > Overdrive > Boost > Phaser > Chorus > Flanger
-//   after the cab:   EQ (low cut, 4 bands, high cut) + presence > Doubler > Room > Stereo Chorus > Delay > Reverb > FX volume
+//   after the cab:   EQ (low cut, 4 bands, high cut) + presence > Doubler > Room > Stereo Chorus > Delay > Reverb
+//   FX volume = level of the Stereo Chorus, Delay and Reverb; Master input / output at the very start and end
 //
 // The table kDKParams below is the single list of these controls. The plugin makes one
 // host parameter per row (so they're saved with the project and can be automated), and
@@ -105,6 +106,8 @@ static const DKParamDef kDKParams[] = {
   {"reverb_Mix", "Reverb mix", 0.18, kKnob, kVal},
   {"fx_Volume", "FX volume", 0.857, kKnob, kVal},
   {"gateHard", "Gate hard", 1, kSwitch, kOn},
+  {"m_In", "Master input", 0.6667, kKnob, kVal},
+  {"m_Out", "Master output", 0.6667, kKnob, kVal},
 };
 // clang-format on
 
@@ -127,6 +130,7 @@ enum DKParam
   pDelay, pDelayTime, pDelayFdbk, pDelayMix,
   pReverb, pReverbSize, pReverbDecay, pReverbMix,
   pFxVolume, pGateHard,
+  pMasterIn, pMasterOut,
   kNumDKParams
 };
 static_assert(sizeof(kDKParams) / sizeof(kDKParams[0]) == kNumDKParams, "kDKParams and DKParam must match");
@@ -654,6 +658,55 @@ struct Reverb
   }
 };
 
+// Tuner: finds the pitch of a mono buffer with the YIN method. Returns 0 if there's no clear note.
+inline double DetectPitch(const float* x, int n, double sr)
+{
+  const int w = n / 2;
+  const int tauMin = std::max(2, (int)(sr / 1400.0));
+  const int tauMax = std::min(w - 1, (int)(sr / 28.0));
+  double energy = 0.0;
+  for (int i = 0; i < n; i++)
+    energy += (double)x[i] * x[i];
+  if (std::sqrt(energy / n) < 0.003)
+    return 0.0; // too quiet
+  std::vector<double> d((size_t)tauMax + 2, 0.0);
+  for (int tau = 1; tau <= tauMax + 1; tau++)
+  {
+    double sum = 0.0;
+    for (int i = 0; i < w; i++)
+    {
+      const double diff = (double)x[i] - x[i + tau];
+      sum += diff * diff;
+    }
+    d[(size_t)tau] = sum;
+  }
+  // cumulative mean normalised difference
+  double running = 0.0;
+  d[0] = 1.0;
+  for (int tau = 1; tau <= tauMax + 1; tau++)
+  {
+    running += d[(size_t)tau];
+    d[(size_t)tau] = running > 0.0 ? d[(size_t)tau] * tau / running : 1.0;
+  }
+  int best = -1;
+  for (int tau = tauMin; tau <= tauMax; tau++)
+  {
+    if (d[(size_t)tau] < 0.15)
+    {
+      while (tau + 1 <= tauMax && d[(size_t)tau + 1] < d[(size_t)tau])
+        tau++;
+      best = tau;
+      break;
+    }
+  }
+  if (best < 0)
+    return 0.0;
+  const double a = d[(size_t)best - 1], b = d[(size_t)best], c = d[(size_t)best + 1];
+  const double den = a - 2.0 * b + c;
+  const double shift = std::fabs(den) > 1e-12 ? 0.5 * (a - c) / den : 0.0;
+  return sr / (best + std::clamp(shift, -1.0, 1.0));
+}
+
 // ---------------------------------------------------------------------------------------------
 // The whole chain
 
@@ -684,6 +737,8 @@ public:
     mCabLevel.Init(mSR, 0.02, 1.0);
     mFxVolume.Init(mSR, 0.02, 1.0);
     mPitchMix.Init(mSR, 0.02, 1.0);
+    mMasterIn.Init(mSR, 0.02, 1.0);
+    mMasterOut.Init(mSR, 0.02, 1.0);
     for (auto& b : mEq)
       b.Reset();
     mLastEq.assign(8, -1.0);
@@ -734,9 +789,10 @@ public:
     const double ratio = std::pow(2.0, std::round(-12.0 + 24.0 * mV[pPitchShift]) / 12.0);
     const int octMode = std::clamp((int)std::lround(mV[pTrashOctMode]), 0, 2);
     const double boost = DbToGain(12.0 * mV[pBoostGain]);
+    const double masterIn = DbToGain(-24.0 + 36.0 * mV[pMasterIn]);
     for (size_t s = 0; s < n; s++)
     {
-      double v = x[s];
+      double v = x[s] * mMasterIn.Next(masterIn);
       if (mFades[fPitch].Active())
       {
         const double mix = mPitchMix.Next(mV[pPitchMix]);
@@ -784,7 +840,9 @@ public:
   {
     const double dblSamples = (0.005 + 0.035 * mV[pDoublerDelay]) * mSR;
     const double echoSamples = NoteBeats(mV[pDelayTime]) * 60.0 / mTempo * mSR;
-    const double vol = mV[pFxVolume] < 0.01 ? 0.0 : DbToGain(-36.0 + 42.0 * mV[pFxVolume]);
+    // FX VOLUME: the level of the FX pedals (Stereo Chorus, Delay, Reverb) only
+    const double fxVol = mV[pFxVolume] < 0.01 ? 0.0 : DbToGain(-36.0 + 42.0 * mV[pFxVolume]);
+    const double masterOut = DbToGain(-24.0 + 36.0 * mV[pMasterOut]);
     static const double tapsL[4] = {0.0071, 0.0133, 0.0197, 0.0271}, tapsR[4] = {0.0093, 0.0151, 0.0233, 0.0317};
     static const double tapG[4] = {0.5, 0.35, 0.25, 0.15};
     for (size_t s = 0; s < n; s++)
@@ -812,18 +870,19 @@ public:
         l += el * g;
         r += er * g;
       }
+      const double fv = mFxVolume.Next(fxVol);
       if (mFades[fSChorus].Active())
       {
         const double rate = 0.1 + 4.9 * mV[pSChorusRate], depth = 6.0 * mV[pSChorusDepth];
         const double wl = mSChorusL.Process(l, rate, 15.0, depth, 0.0);
         const double wr = mSChorusR.Process(r, rate, 15.0, depth, 0.0);
-        const double g = mFades[fSChorus].Next() * mV[pSChorusMix];
+        const double g = std::min(1.0, mFades[fSChorus].Next() * mV[pSChorusMix] * fv);
         l = Lerp(l, wl, g);
         r = Lerp(r, wr, g);
       }
       if (mFades[fDelay].Active())
       {
-        const double w = mEcho.Process(0.5 * (l + r), echoSamples, mV[pDelayFdbk]) * mV[pDelayMix] * mFades[fDelay].Next();
+        const double w = mEcho.Process(0.5 * (l + r), echoSamples, mV[pDelayFdbk]) * mV[pDelayMix] * mFades[fDelay].Next() * fv;
         l += w;
         r += w;
       }
@@ -831,13 +890,13 @@ public:
       {
         double rl, rr;
         mReverb.Process(l, r, mV[pReverbDecay], rl, rr);
-        const double g = mV[pReverbMix] * mFades[fReverb].Next();
+        const double g = mV[pReverbMix] * mFades[fReverb].Next() * fv;
         l += rl * g;
         r += rr * g;
       }
-      const double gv = mFxVolume.Next(vol);
-      L[s] = l * gv;
-      R[s] = r * gv;
+      const double gm = mMasterOut.Next(masterOut);
+      L[s] = l * gm;
+      R[s] = r * gm;
     }
   }
 
@@ -901,7 +960,7 @@ private:
   Echo mEcho;
   Reverb mReverb;
   DelayLine mDoubler, mRoom;
-  Smooth mDoublerTime, mBoostGain, mCabLevel, mFxVolume, mPitchMix;
+  Smooth mDoublerTime, mBoostGain, mCabLevel, mFxVolume, mPitchMix, mMasterIn, mMasterOut;
   Biquad mEq[7];
   int mEqOrder[7] = {0};
   int mNumEq = 0;

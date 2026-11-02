@@ -49,12 +49,12 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       </div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1; justify-content: center">
-      <button aria-label="Previous preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">&lsaquo;</button>
-      <div style="min-width: 200px; height: 36px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; background: #121416; border: 1px solid #4a5158; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 14px">
-        <span>Preset: Heavy Rhythm</span><span style="color: #9aa1a8">▾</span>
-      </div>
-      <button aria-label="Next preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">&rsaquo;</button>
-      <button style="height: 36px; padding: 0 14px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-size: 13px">Save</button>
+      <button onClick="{{preset.prev}}" aria-label="Previous preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">&lsaquo;</button>
+      <button onClick="{{preset.menu}}" aria-label="Choose a preset" style="min-width: 220px; height: 36px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #121416; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; cursor: pointer">
+        <span>{{preset.name}}</span><span style="color: #9aa1a8">▾</span>
+      </button>
+      <button onClick="{{preset.next}}" aria-label="Next preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">&rsaquo;</button>
+      <button onClick="{{preset.save}}" style="height: 36px; padding: 0 14px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-size: 13px">Save</button>
     </div>
     <!-- Doubler: global stereo widener, splits the signal into L and R with a short delay -->
     <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 10px 0 4px; background: #121416; border: 1px solid #4a5158; border-radius: 22px">
@@ -82,6 +82,12 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       <svg width="34" height="34" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="{{gateMini.arc}}" fill="none" stroke="#5ee08a" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="38" r="24" fill="#4a5158" stroke="#0b0b0c" stroke-width="3"></circle><line x1="38" y1="38" x2="38" y2="17" stroke="#e9e2d6" stroke-width="6" stroke-linecap="round" transform="{{gateMini.rot}}"></line></svg>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #9aa1a8">GATE</span>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: {{gateMiniColor}}">{{gateMini.value}}</span>
+    </button>
+    <!-- Master input level -->
+    <button onPointerDown="{{masterIn.down}}" onPointerMove="{{masterIn.move}}" onPointerUp="{{masterIn.up}}" onPointerCancel="{{masterIn.up}}" onDoubleClick="{{masterIn.reset}}" onKeyDown="{{masterIn.key}}" onWheel="{{masterIn.wheel}}" aria-label="{{masterIn.aria}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; background: none; border: 0; color: #e8e4dc; touch-action: none; cursor: ns-resize">
+      <svg width="34" height="34" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="{{masterIn.arc}}" fill="none" stroke="{{accent}}" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="38" r="24" fill="#4a5158" stroke="#0b0b0c" stroke-width="3"></circle><line x1="38" y1="38" x2="38" y2="17" stroke="#e9e2d6" stroke-width="6" stroke-linecap="round" transform="{{masterIn.rot}}"></line></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #9aa1a8">INPUT</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #e8e4dc">{{masterIn.value}}</span>
     </button>
     <!-- IN meter -->
     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px">
@@ -199,6 +205,12 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       </div>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 14px; color: #9aa1a8">OUT</span>
     </div>
+    <!-- Master output level -->
+    <button onPointerDown="{{masterOut.down}}" onPointerMove="{{masterOut.move}}" onPointerUp="{{masterOut.up}}" onPointerCancel="{{masterOut.up}}" onDoubleClick="{{masterOut.reset}}" onKeyDown="{{masterOut.key}}" onWheel="{{masterOut.wheel}}" aria-label="{{masterOut.aria}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; background: none; border: 0; color: #e8e4dc; touch-action: none; cursor: ns-resize">
+      <svg width="34" height="34" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="{{masterOut.arc}}" fill="none" stroke="{{accent}}" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="38" r="24" fill="#4a5158" stroke="#0b0b0c" stroke-width="3"></circle><line x1="38" y1="38" x2="38" y2="17" stroke="#e9e2d6" stroke-width="6" stroke-linecap="round" transform="{{masterOut.rot}}"></line></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #9aa1a8">OUTPUT</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #e8e4dc">{{masterOut.value}}</span>
+    </button>
   </div>
 
   <!-- Panel area -->
@@ -1028,10 +1040,10 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           <g fill="#3d434f" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"><path d="M40 360 V318 Q40 298 62 298 Q84 298 84 318 V360 Z"></path><path d="M980 352 V318 H966 V304 H980 V288 H994 V304 H1008 V318 H994 V352 Z"></path></g>
           <path d="M0 520 Q130 504 260 516 T520 512 T780 516 T1050 508 V546 H0 Z" fill="#3a3f4a" opacity="0.85"></path>
         </svg>
-        <div style="font-family: 'Cinzel', Georgia, serif; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; color: #15171b; background: #8a9097; border: 3px solid #0b0b0c; border-radius: 22px 22px 3px 3px; padding: 6px 16px 4px; box-shadow: 3px 3px 0 #0b0b0c">TUNER · OUTPUT MUTED</div>
+        <div style="font-family: 'Cinzel', Georgia, serif; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; color: #15171b; background: #8a9097; border: 3px solid #0b0b0c; border-radius: 22px 22px 3px 3px; padding: 6px 16px 4px; box-shadow: 3px 3px 0 #0b0b0c">{{tuner.title}}</div>
         <div style="display: flex; align-items: baseline; gap: 10px">
-          <span style="font-family: 'Cinzel', Georgia, serif; font-size: 120px; font-weight: 700; line-height: 1; color: {{tuner.color}}; text-shadow: 4px 4px 0 #0b0b0c">E</span>
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; color: #e9e2d6; text-shadow: 0 1px 0 #0b0b0c">2</span>
+          <span style="font-family: 'Cinzel', Georgia, serif; font-size: 120px; font-weight: 700; line-height: 1; color: {{tuner.color}}; text-shadow: 4px 4px 0 #0b0b0c">{{tuner.note}}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; color: #e9e2d6; text-shadow: 0 1px 0 #0b0b0c">{{tuner.oct}}</span>
         </div>
         <div style="width: 560px; display: flex; flex-direction: column; gap: 6px">
           <div style="height: 44px; position: relative; background: #121216; border: 4px solid #0b0b0c; border-radius: 8px; box-shadow: inset 0 0 0 2px #6c7379, 4px 4px 0 #0b0b0c">
@@ -1389,7 +1401,7 @@ class Component extends DCLogic {
     const mixerCh = [0.7, 0.55, 0.8, 0.4, 0.65, 0.5].map((v, i) => ({
       knob: 'width: 12px; height: 12px; border-radius: 50%; background: ' + ['#c0393b', '#e0b44a', '#4a7f9e', '#6fbf73', '#c0393b', '#e0b44a'][i] + '; border: 2px solid #0b0b0c; box-sizing: border-box;',
       fader: 'position: absolute; left: -6px; width: 16px; height: 8px; border-radius: 2px; background: #d5d9dd; border: 1.5px solid #0b0b0c; box-sizing: border-box; top: ' + Math.round((1 - v) * 44) + 'px;' }));
-    // master FX volume: -inf..+6 dB, drives the mixer lights and the OUT meter
+    // FX volume: -inf..+6 dB, the level of the FX pedals (Stereo Chorus, Delay, Reverb)
     // doubler (top bar): one copy hard left, a delayed copy hard right
     const dk = K('dbl_Delay', 'Doubler L/R delay', 0.35, lin(5, 40, 0, ' ms'));
     const dOff = Math.round(1 + get('dbl_Delay') * 4);
@@ -1398,6 +1410,8 @@ class Component extends DCLogic {
       splitL: on.doubler ? 'M8 10 C12 10 14 3 24 3' : 'M8 10 H24', splitR: on.doubler ? 'M8 10 C' + (12 + dOff) + ' 10 ' + (14 + dOff) + ' 17 24 17' : 'M8 10 H24',
       btn: 'height: 30px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; ' + (on.doubler ? 'background: ' + accent + '; color: #1b1e21; border: 1px solid ' + accent + ';' : 'background: #2e3338; color: #c9ced3; border: 1px solid #4a5158;'),
       led: 'width: 7px; height: 7px; border-radius: 50%; background: ' + (on.doubler ? '#ff4b3e; box-shadow: 0 0 6px 2px rgba(255,75,62,0.7)' : '#3a2020') + ';' };
+    const masterIn = K('m_In', 'Master input', 0.6667, sgn(-24, 12, 1, ' dB'));
+    const masterOut = K('m_Out', 'Master output', 0.6667, sgn(-24, 12, 1, ' dB'));
     const fxVol = K('fx_Volume', 'FX volume', 0.857, (t) => t < 0.01 ? '-inf dB' : sgn(-36, 6, 1, ' dB')(t));
     const volT = get('fx_Volume');
     const mixLvl = view === 'fx' ? Math.round((0.15 + 0.4 * noise(7)) * 10 * volT * 1.25) : 0;
@@ -1530,10 +1544,11 @@ class Component extends DCLogic {
     const muted = view === 'tuner' && opt.mute === 'On';
     const meters = {
       inL: bar((0.35 + 0.35 * noise(0)) * (0.6 + inGain * 0.8)), inR: bar((0.35 + 0.35 * noise(1)) * (0.6 + inGain * 0.8)),
-      outL: bar(muted ? 0 : (0.4 + 0.3 * noise(2)) * (0.4 + outGain) * volT * 1.25), outR: bar(muted ? 0 : (0.4 + 0.3 * noise(on.doubler ? 3 + get('dbl_Delay') * 2 : 2)) * (0.4 + outGain) * volT * 1.25)
+      outL: bar(muted ? 0 : (0.4 + 0.3 * noise(2)) * (0.4 + outGain) * get('m_Out') * 1.5), outR: bar(muted ? 0 : (0.4 + 0.3 * noise(on.doubler ? 3 + get('dbl_Delay') * 2 : 2)) * (0.4 + outGain) * get('m_Out') * 1.5)
     };
     const cents = Math.round(Math.sin(tick * 0.18) * 5 - 3);
     const tuner = {
+      note: 'E', oct: '2', title: 'TUNER' + (opt.mute === 'On' ? ' · OUTPUT MUTED' : ''),
       color: Math.abs(cents) <= 2 ? '#6fbf73' : accent,
       needle: 'position: absolute; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; background: ' + (Math.abs(cents) <= 2 ? '#6fbf73' : accent) + '; left: calc(' + (50 + cents) + '% - 2px);',
       text: (82.41 * Math.pow(2, cents / 1200)).toFixed(1) + ' Hz · ' + (cents === 0 ? 'in tune' : Math.abs(cents) + ' cents ' + (cents < 0 ? 'flat' : 'sharp')) + ' · A = ' + opt.ref + ' Hz'
@@ -1559,7 +1574,7 @@ class Component extends DCLogic {
     const cabBox = 'width: 72px; height: 72px; box-sizing: border-box; border-radius: 6px; background: #141618; border: 1px solid #4a5158; padding: 7px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 4px 0;' + (on.cab ? '' : ' opacity: 0.45;');
 
     return {
-      accent, m, is, isBoard, isGate: view === 'gate', gateMini: gatePedal.knobs[0], gateMiniColor: on.gate && get('gate_Gate') >= 0.01 ? (gateOpen ? '#5ee08a' : '#ff4b3e') : '#6c7379', isFx: view === 'fx', fxVol, dbl, notGate: view !== 'gate', reaper, board, cables, boardTitle: titles[view] || '', boardHint: hints[view] || '', mixerCh, mixerLeds,
+      accent, m, is, isBoard, isGate: view === 'gate', gateMini: gatePedal.knobs[0], gateMiniColor: on.gate && get('gate_Gate') >= 0.01 ? (gateOpen ? '#5ee08a' : '#ff4b3e') : '#6c7379', isFx: view === 'fx', fxVol, masterIn, masterOut, dbl, notGate: view !== 'gate', reaper, board, cables, boardTitle: titles[view] || '', boardHint: hints[view] || '', mixerCh, mixerLeds,
       w, wSwitches, pitchMini, pedals, fxPedals, slots, slot, ampCar, ampPlate, ampMiniFace, cabCar, cabCur, ampKnobs, cabKnobs,
       eqBands, eqMini, eqPath, eqFill, eqDots, cabBox, meters, tuner, settings,
       tunerBtn: iconBtn(view === 'tuner'), settingsBtn: iconBtn(view === 'settings'),

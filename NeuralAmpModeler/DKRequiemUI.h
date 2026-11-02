@@ -71,12 +71,12 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       </div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1; justify-content: center">
-      <button aria-label="Previous preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">\u2039</button>
-      <div style="min-width: 200px; height: 36px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; background: #121416; border: 1px solid #4a5158; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 14px">
-        <span>Preset: Heavy Rhythm</span><span style="color: #9aa1a8">\u25be</span>
-      </div>
-      <button aria-label="Next preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">\u203a</button>
-      <button style="height: 36px; padding: 0 14px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-size: 13px">Save</button>
+      <button onClick="${v.preset?.prev}" aria-label="Previous preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">\u2039</button>
+      <button onClick="${v.preset?.menu}" aria-label="Choose a preset" style="min-width: 220px; height: 36px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #121416; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; cursor: pointer">
+        <span>${v.preset?.name}</span><span style="color: #9aa1a8">\u25be</span>
+      </button>
+      <button onClick="${v.preset?.next}" aria-label="Next preset" style="width: 44px; height: 36px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px">\u203a</button>
+      <button onClick="${v.preset?.save}" style="height: 36px; padding: 0 14px; background: #2e3338; color: #e8e4dc; border: 1px solid #4a5158; border-radius: 4px; font-size: 13px">Save</button>
     </div>
     
     <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 10px 0 4px; background: #121416; border: 1px solid #4a5158; border-radius: 22px">
@@ -106,9 +106,16 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: ${v.gateMiniColor}">${v.gateMini?.value}</span>
     </button>
     
+    <button onPointerDown="${v.masterIn?.down}" onPointerMove="${v.masterIn?.move}" onPointerUp="${v.masterIn?.up}" onPointerCancel="${v.masterIn?.up}" onDblClick="${v.masterIn?.reset}" onKeyDown="${v.masterIn?.key}" onWheel="${v.masterIn?.wheel}" aria-label="${v.masterIn?.aria}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; background: none; border: 0; color: #e8e4dc; touch-action: none; cursor: ns-resize">
+      <svg width="34" height="34" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="${v.masterIn?.arc}" fill="none" stroke="${v.accent}" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="38" r="24" fill="#4a5158" stroke="#0b0b0c" stroke-width="3"></circle><line x1="38" y1="38" x2="38" y2="17" stroke="#e9e2d6" stroke-width="6" stroke-linecap="round" transform="${v.masterIn?.rot}"></line></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #9aa1a8">INPUT</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #e8e4dc">${v.masterIn?.value}</span>
+    </button>
+    
     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px">
       <div style="height: 76px; display: flex; gap: 3px; align-items: flex-end; padding: 2px; background: #121416; border-radius: 3px; box-sizing: border-box">
-        <div style="width: 7px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end"><div style="${v.meters?.inL}"></div></div>
+        <div st)DKUI",
+    R"DKUI(yle="width: 7px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end"><div style="${v.meters?.inL}"></div></div>
         <div style="width: 7px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end"><div style="${v.meters?.inR}"></div></div>
       </div>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 14px; color: #9aa1a8">IN</span>
@@ -122,8 +129,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
         <span style="width: 6px; height: 6px; border-radius: 50%; background: ${v.gateLed}"></span>
         <span style="width: 12px; height: 12px; border-radius: 50%; background: #c9ced3; border: 2px solid #8a9097; box-sizing: border-box; margin-top: auto; margin-bottom: 5px"></span>
       </div>
-      <span style="font-size: 12px; line-height: 14px; font-weight: 600">Gat)DKUI",
-    R"DKUI(e</span>
+      <span style="font-size: 12px; line-height: 14px; font-weight: 600">Gate</span>
     </button>
     <div style="flex-grow: 1; min-width: 6px; height: 3px; background: #4a5158; border-radius: 2px; margin-bottom: 22px"></div>
 
@@ -222,6 +228,12 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       </div>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 14px; color: #9aa1a8">OUT</span>
     </div>
+    
+    <button onPointerDown="${v.masterOut?.down}" onPointerMove="${v.masterOut?.move}" onPointerUp="${v.masterOut?.up}" onPointerCancel="${v.masterOut?.up}" onDblClick="${v.masterOut?.reset}" onKeyDown="${v.masterOut?.key}" onWheel="${v.masterOut?.wheel}" aria-label="${v.masterOut?.aria}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; background: none; border: 0; color: #e8e4dc; touch-action: none; cursor: ns-resize">
+      <svg width="34" height="34" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="${v.masterOut?.arc}" fill="none" stroke="${v.accent}" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="38" r="24" fill="#4a5158" stroke="#0b0b0c" stroke-width="3"></circle><line x1="38" y1="38" x2="38" y2="17" stroke="#e9e2d6" stroke-width="6" stroke-linecap="round" transform="${v.masterOut?.rot}"></line></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #9aa1a8">OUTPUT</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 12px; color: #e8e4dc">${v.masterOut?.value}</span>
+    </button>
   </div>
 
   
@@ -234,7 +246,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           <div style="font-family: 'Saira Condensed', 'Arial Narrow', sans-serif; font-size: 26px; font-weight: 700">${v.boardTitle}</div>
           <div style="font-size: 13px; color: #9aa1a8; flex: 1; min-width: 0">${v.boardHint}</div>
           ${(v.isFx) ? html`
-            <button onPointerDown="${v.fxVol?.down}" onPointerMove="${v.fxVol?.move}" onPointerUp="${v.fxVol?.up}" onPointerCancel="${v.fxVol?.up}" onDblClick="${v.fxVol?.reset}" onKeyDown="${v.fxVol?.key}" onWheel="${v.fxVol?.wheel}" aria-label="${v.fxVol?.aria}" style="align-self: center; display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 6px; background: #1b1e21; border: 1px solid #5a6269; border-radius: 30px; color: #e8e4dc; touch-action: none; cursor: ns-resize">
+            <button onPointerDown="${v.fxVol?.down}" onPointerMove="${v.fxVol?.move}" onPointerUp="${v.fxVol?.up}" onPointerCancel="${v.fxVol?.up}" onDblClick="${v.fxVol?.reset}" onKey)DKUI",
+    R"DKUI(Down="${v.fxVol?.key}" onWheel="${v.fxVol?.wheel}" aria-label="${v.fxVol?.aria}" style="align-self: center; display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 6px; background: #1b1e21; border: 1px solid #5a6269; border-radius: 30px; color: #e8e4dc; touch-action: none; cursor: ns-resize">
               <svg width="48" height="48" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34" fill="#0b0b0c" stroke="#4a5158" stroke-width="3"></circle><path d="${v.fxVol?.arc}" fill="none" stroke="${v.accent}" stroke-width="5" stroke-linecap="round"></path><circle cx="38" cy="38" r="25" fill="#3b4147" stroke="#5a6269" stroke-width="1"></circle><line x1="38" y1="38" x2="38" y2="16" stroke="${v.accent}" stroke-width="5" stroke-linecap="round" transform="${v.fxVol?.rot}"></line></svg>
               <span style="display: flex; flex-direction: column; align-items: flex-start">
                 <span style="font-family: 'Saira Condensed', 'Arial Narrow', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.1em">FX VOLUME</span>
@@ -255,8 +268,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           </div>
 
           
-          <div aria-hidden="true" style="position: absolute; left: 30px; top: 60px; width: 220px; height: 11px; border-radius: 6px; border: 2px solid #0b0b0c; background: linear-gradient(90deg, #8d6236 0%, #c89b62 12%, #d8b07a 100%); transfor)DKUI",
-    R"DKUI(m: rotate(14deg)"></div>
+          <div aria-hidden="true" style="position: absolute; left: 30px; top: 60px; width: 220px; height: 11px; border-radius: 6px; border: 2px solid #0b0b0c; background: linear-gradient(90deg, #8d6236 0%, #c89b62 12%, #d8b07a 100%); transform: rotate(14deg)"></div>
           <div aria-hidden="true" style="position: absolute; left: 42px; top: 86px; width: 220px; height: 11px; border-radius: 6px; border: 2px solid #0b0b0c; background: linear-gradient(90deg, #8d6236 0%, #c89b62 12%, #d8b07a 100%); transform: rotate(4deg)"></div>
           <div aria-hidden="true" style="position: absolute; left: 318px; top: 50px; width: 26px; height: 30px; background: #e07a3f; border: 2px solid #0b0b0c; border-radius: 50% 50% 50% 50% / 38% 38% 62% 62%; transform: rotate(22deg)"></div>
           <div aria-hidden="true" style="position: absolute; left: 356px; top: 92px; width: 26px; height: 30px; background: #18181a; border: 2px solid #e9e2d6; border-radius: 50% 50% 50% 50% / 38% 38% 62% 62%; transform: rotate(-34deg)"></div>
@@ -316,7 +328,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                 <line x1="166" y1="264" x2="228" y2="120" stroke="#c9ced3" stroke-width="12" stroke-dasharray="1.6 12"></line>
                 <path d="M164 268 L178 232 M182 222 L196 190 M200 180 L212 152" stroke="#e9e2d6" stroke-width="0" ></path>
                 <path d="M58 250 L120 222 L182 258 L172 302 L124 314 L94 344 L82 312 Z" fill="#7a1f22" stroke="#0b0b0c" stroke-width="5" stroke-linejoin="round"></path>
-                <path d="M68 254 L120 230 L172 262 L164 296 L122 306 L98 330 L90 308 Z" fill="none" stroke="#e9e2d6" stroke-width="2.2" stroke-linejoin="round" opacity="0.85"></path>
+                <path d="M68 254 L120 230 L172 262 L164 296 L122 306 L98 330 L90 30)DKUI",
+    R"DKUI(8 Z" fill="none" stroke="#e9e2d6" stroke-width="2.2" stroke-linejoin="round" opacity="0.85"></path>
                 <rect x="110" y="258" width="30" height="12" rx="3" fill="#15171b" stroke="#0b0b0c" stroke-width="2.5" transform="rotate(-22 125 264)"></rect>
                 <rect x="124" y="282" width="24" height="9" rx="2" fill="#8a9097" stroke="#0b0b0c" stroke-width="2.5" transform="rotate(-22 136 286)"></rect>
                 <path d="M133 294 L226 112 M137 296 L230 114 M141 298 L234 116" stroke="#e9e2d6" stroke-width="0.9"></path>
@@ -344,8 +357,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           ${(v.notGate) ? html`
           
             <svg aria-hidden="true" width="470" height="170" viewBox="0 0 470 170" style="position: absolute; left: 60px; top: 376px; transform: rotate(-6deg); overflow: visible">
-              <g transform="translate(8 10)" opacity="0.)DKUI",
-    R"DKUI(5" fill="#0b0b0c"><path d="M168 58 L22 4 Q6 0 10 16 L112 84 L10 152 Q6 168 22 164 L168 110 Z"></path><path d="M166 70 L394 72 L394 96 L166 98 Z"></path><path d="M392 66 L452 56 Q462 56 466 66 L470 84 L466 102 Q462 112 452 112 L392 102 Z"></path></g>
+              <g transform="translate(8 10)" opacity="0.5" fill="#0b0b0c"><path d="M168 58 L22 4 Q6 0 10 16 L112 84 L10 152 Q6 168 22 164 L168 110 Z"></path><path d="M166 70 L394 72 L394 96 L166 98 Z"></path><path d="M392 66 L452 56 Q462 56 466 66 L470 84 L466 102 Q462 112 452 112 L392 102 Z"></path></g>
               <path d="M168 58 L22 4 Q6 0 10 16 L112 84 L10 152 Q6 168 22 164 L168 110 Z" fill="#7a1f22" stroke="#0b0b0c" stroke-width="5" stroke-linejoin="round"></path>
               <path d="M156 64 L28 16 L120 84 L28 152 L156 104" fill="none" stroke="#e9e2d6" stroke-width="2.5" stroke-linejoin="round" opacity="0.85"></path>
               <path d="M168 62 L130 52 L120 84 L130 116 L168 106 Z" fill="#e9e2d6" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"></path>
@@ -425,7 +437,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                 <div style="background: #0f0f10; border: 2px solid #0b0b0c; border-radius: 6px; padding: 4px 7px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); max-width: 96px; box-sizing: border-box; text-align: center">
                   <span style="font-family: 'Cinzel', Georgia, serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #e9e2d6; line-height: 1.15; text-transform: uppercase">${p?.name}</span>
                 </div>
-                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #f6f2ea; opacity: 0.85; min-height: 10px; text-shadow: 0 1px 0 #0b0b0c">${p?.mode}</span>
+         )DKUI",
+    R"DKUI(       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #f6f2ea; opacity: 0.85; min-height: 10px; text-shadow: 0 1px 0 #0b0b0c">${p?.mode}</span>
                 <button onClick="${p?.toggle}" aria-label="${p?.switchLabel}" style="${p?.stomp}"></button>
               ` : null}
 
@@ -440,8 +453,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                   <path d="M0 214 Q40 202 90 210 T190 204 V324 H0 Z" fill="#262a33"></path>
                   <path d="M0 246 Q46 234 96 244 T190 238 V324 H0 Z" fill="#2f3440" stroke="#0b0b0c" stroke-width="2"></path>
                   <g fill="#3d434f" stroke="#0b0b0c" stroke-width="2.5" stroke-linejoin="round">
-                    <path)DKUI",
-    R"DKUI( d="M10 288 V266 Q10 255 21 255 Q32 255 32 266 V288 Z"></path>
+                    <path d="M10 288 V266 Q10 255 21 255 Q32 255 32 266 V288 Z"></path>
                     <path d="M162 290 V272 H156 V266 H162 V258 H168 V266 H174 V272 H168 V290 Z"></path>
                   </g>
                   <path d="M17 266 H25 M21 262 V274" stroke="#0b0b0c" stroke-width="2"></path>
@@ -516,7 +528,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                 </div>
                 <button onClick="${p?.toggle}" aria-label="${p?.switchLabel}" style="width: 64px; height: 64px; margin-top: auto; background: none; border: 0; padding: 0; flex-shrink: 0">
                   <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
-                    <polygon points="32,3 57,17.5 57,46.5 32,61 7,46.5 7,17.5" fill="#6c7379" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"></polygon>
+                    <polygon points="32,3 57,17)DKUI",
+    R"DKUI(.5 57,46.5 32,61 7,46.5 7,17.5" fill="#6c7379" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"></polygon>
                     <circle cx="32" cy="35" r="20" fill="#0b0b0c"></circle>
                     <g style="${p?.stompCap}">
                       <circle cx="32" cy="32" r="19" fill="#c9ced3" stroke="#0b0b0c" stroke-width="3.5"></circle>
@@ -537,8 +550,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                   <g style="${p?.pal?.stone}" stroke="#0b0b0c" stroke-width="2.5" stroke-linejoin="round"><path d="M6 262 V244 Q6 235 15 235 Q24 235 24 244 V262 Z"></path><path d="M118 264 V248 H112 V242 H118 V235 H124 V242 H130 V248 H124 V264 Z"></path></g>
                   <path d="M0 274 Q22 266 46 272 T92 270 T138 268 V284 H0 Z" style="${p?.pal?.fog}" opacity="0.85"></path>
                   <rect x="0" y="0" width="138" height="5" style="${p?.stripe}"></rect>
-                  ${(p?.m_candles) ? html`<g stroke="#0b0b0c" stroke-w)DKUI",
-    R"DKUI(idth="2"><rect x="8" y="34" width="7" height="24" fill="#e9e2d6"></rect><rect x="18" y="42" width="6" height="16" fill="#e9e2d6"></rect><rect x="122" y="38" width="7" height="22" fill="#e9e2d6"></rect></g><g fill="#f1d58a" stroke="#0b0b0c" stroke-width="1.2"><path d="M11.5 22 q5 7 0 11 q-5 -4 0 -11 Z"></path><path d="M21 31 q4 6 0 10 q-4 -4 0 -10 Z"></path><path d="M125.5 26 q5 7 0 11 q-5 -4 0 -11 Z"></path></g>` : null}
+                  ${(p?.m_candles) ? html`<g stroke="#0b0b0c" stroke-width="2"><rect x="8" y="34" width="7" height="24" fill="#e9e2d6"></rect><rect x="18" y="42" width="6" height="16" fill="#e9e2d6"></rect><rect x="122" y="38" width="7" height="22" fill="#e9e2d6"></rect></g><g fill="#f1d58a" stroke="#0b0b0c" stroke-width="1.2"><path d="M11.5 22 q5 7 0 11 q-5 -4 0 -11 Z"></path><path d="M21 31 q4 6 0 10 q-4 -4 0 -10 Z"></path><path d="M125.5 26 q5 7 0 11 q-5 -4 0 -11 Z"></path></g>` : null}
                   ${(p?.m_crows) ? html`<path d="M138 26 Q118 24 100 30" fill="none" stroke="#0b0b0c" stroke-width="3.5" stroke-linecap="round"></path><path d="M112 27 q-2 -9 5 -11 q4 -2 6 2 l4 -1 l-3 3 q1 6 -4 8 Z M126 25 q-1 -7 4 -9 q3 -1 5 2 l3 0 l-3 2 q0 5 -4 6 Z" fill="#0b0b0c"></path><path d="M6 20 q4 -5 8 0 q4 -5 8 0" fill="none" stroke="#0b0b0c" stroke-width="2.5"></path>` : null}
                   ${(p?.m_spire) ? html`<path d="M116 70 V30 L126 4 L136 30 V70 Z" fill="#0b0b0c"></path><path d="M126 0 V8 M122 3 H130" stroke="#0b0b0c" stroke-width="2.5"></path><rect x="123" y="38" width="6" height="10" rx="3" style="${p?.pal?.glow}"></rect><path d="M0 70 V44 L10 30 L20 44 V70 Z" fill="#0b0b0c"></path>` : null}
                   ${(p?.m_bats) ? html`<path d="M10 24 q4 -6 8 0 q4 -6 8 0 l-4 3 l-4 -3 l-4 3 Z M108 18 q3 -5 7 0 q3 -5 7 0 l-3.5 2.5 l-3.5 -2.5 l-3.5 2.5 Z M118 44 q3 -4 5 0 q3 -4 5 0 l-2.5 2 l-2.5 -2 l-2.5 2 Z" fill="#0b0b0c"></path>` : null}
@@ -582,7 +594,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                       <path d="M66 62 Q84 54 104 62 L104 70 L66 70 Z" fill="#3a2a20" stroke="#0b0b0c" stroke-width="2"></path>
                     ` : null}
                     ${(p?.k_phaser) ? html`
-                      <circle cx="60" cy="34" r="22" fill="#e9e2d6" stroke="#0b0b0c" stroke-width="2.5"></circle><g style="${p?.a1}"><circle cx="60" cy="34" r="22" fill="#121216"></circle></g><circle cx="60" cy="34" r="22" fill="none" stroke="#0b0b0c" stroke-width="2.5"></circle><circle cx="18" cy="14" r="1.5" fill="#e9e2d6"></circle><circle cx="100" cy="20" r="1.5" fill="#e9e2d6"></circle>
+             )DKUI",
+    R"DKUI(         <circle cx="60" cy="34" r="22" fill="#e9e2d6" stroke="#0b0b0c" stroke-width="2.5"></circle><g style="${p?.a1}"><circle cx="60" cy="34" r="22" fill="#121216"></circle></g><circle cx="60" cy="34" r="22" fill="none" stroke="#0b0b0c" stroke-width="2.5"></circle><circle cx="18" cy="14" r="1.5" fill="#e9e2d6"></circle><circle cx="100" cy="20" r="1.5" fill="#e9e2d6"></circle>
                     ` : null}
                     ${(p?.k_chorus) ? html`
                       <g style="${p?.a1}"><path d="M20 30 C20 18 40 18 40 30 L42 58 L36 54 L32 60 L28 54 L18 58 Z" fill="#e9e2d6" stroke="#0b0b0c" stroke-width="2"></path><ellipse cx="30" cy="34" rx="3" ry="4" fill="#0b0b0c"></ellipse></g>
@@ -598,8 +611,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                       <g style="${p?.a2}"><path d="M70 28 C70 14 92 14 92 28 L94 60 L87 55 L82 62 L77 55 L68 60 Z" fill="#e9e2d6" stroke="#0b0b0c" stroke-width="2"></path><ellipse cx="81" cy="31" rx="3" ry="4" fill="#0b0b0c"></ellipse></g>
                     ` : null}
                     ${(p?.k_delay) ? html`
-                      <g fill="#3d434f" stroke="#0b0b0c" stroke-width="2.5"><path d="M10 64 V36 Q10 26 21 26 Q32 26 32 36 V64 Z"></path><path style="${p?.a1}" d="M38 64 V40 Q38 31 47 31 Q56 31 56 40 V64 Z"></path><path style="${p?.a2}" d="M62 64 V44 Q62 36 70 36 Q78 36 78 44 V64 Z"></p)DKUI",
-    R"DKUI(ath><path style="${p?.a3}" d="M84 64 V48 Q84 41 91 41 Q98 41 98 48 V64 Z"></path></g><path d="M17 40 H25 M21 36 V48" stroke="#0b0b0c" stroke-width="2"></path>
+                      <g fill="#3d434f" stroke="#0b0b0c" stroke-width="2.5"><path d="M10 64 V36 Q10 26 21 26 Q32 26 32 36 V64 Z"></path><path style="${p?.a1}" d="M38 64 V40 Q38 31 47 31 Q56 31 56 40 V64 Z"></path><path style="${p?.a2}" d="M62 64 V44 Q62 36 70 36 Q78 36 78 44 V64 Z"></path><path style="${p?.a3}" d="M84 64 V48 Q84 41 91 41 Q98 41 98 48 V64 Z"></path></g><path d="M17 40 H25 M21 36 V48" stroke="#0b0b0c" stroke-width="2"></path>
                     ` : null}
                     ${(p?.k_reverb) ? html`
                       <path d="M14 66 V34 Q14 8 60 8 Q106 8 106 34 V66" fill="#1d1f22" stroke="#4a5158" stroke-width="3"></path><path d="M28 66 V38 Q28 20 60 20 Q92 20 92 38 V66" fill="none" stroke="#2f3440" stroke-width="2"></path>
@@ -661,7 +673,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                       <circle cx="66" cy="37" r="3.5" fill="#0b0b0c"></circle>
                     </g>
                   </svg>
-                  <div style="position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); padding: 2px 8px; border-radius: 8px; background: rgba(11,11,12,0.8); font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; white-space: nowrap; color: ${p?.readColor}">${p?.readout}</div>
+                  <div style="position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); padding: 2p)DKUI",
+    R"DKUI(x 8px; border-radius: 8px; background: rgba(11,11,12,0.8); font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; white-space: nowrap; color: ${p?.readColor}">${p?.readout}</div>
                 </div>
                 <div style="background: #8a9097; border: 3px solid #0b0b0c; border-radius: 30px 30px 3px 3px; padding: 6px 12px 3px; display: flex; flex-direction: column; align-items: center; box-shadow: 3px 3px 0 #0b0b0c">
                   <span style="font-family: 'Cinzel', Georgia, serif; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: #15171b; line-height: 1.1; white-space: nowrap">KNELL SHIFT</span>
@@ -681,8 +694,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
               ${(p?.isWahP) ? html`
                 <svg aria-hidden="true" width="150" height="294" viewBox="0 0 150 294" style="position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none">
                   <rect x="0" y="0" width="150" height="294" fill="#1a1c24"></rect>
-                  <g fill="#e9e2d6" opacity="0.55"><circle cx="48" cy="65" r="1.0"></circle><circle cx="128" cy="142" r="1.3"></circle><circle cx="53" cy="134" r="1.0"></circle><circle cx="141" cy="129" r="1.0"></circle><circle cx="78" cy="24" r="1.0"></circle><circle cx="111" cy="85" r="1.3"></circle><circle cx="133" cy="19" r="1.3"></circle><circle cx="115" cy="77" r="1.0"></circle><circle cx="68" cy="36" r="0.8"></circle><circle cx="87" cy="78" r="0.8"></circle><circle cx="22" cy="99" r="0.8"></circle><circle cx="88" cy="68" r="1.3)DKUI",
-    R"DKUI("></circle><circle cx="75" cy="87" r="0.8"></circle><circle cx="96" cy="140" r="1.3"></circle><circle cx="83" cy="148" r="1.0"></circle><circle cx="105" cy="53" r="1.3"></circle><circle cx="34" cy="14" r="1.0"></circle><circle cx="37" cy="22" r="0.8"></circle><circle cx="29" cy="36" r="1.0"></circle><circle cx="6" cy="20" r="1.0"></circle><circle cx="76" cy="95" r="0.8"></circle><circle cx="55" cy="105" r="1.0"></circle><circle cx="127" cy="97" r="1.3"></circle></g>
+                  <g fill="#e9e2d6" opacity="0.55"><circle cx="48" cy="65" r="1.0"></circle><circle cx="128" cy="142" r="1.3"></circle><circle cx="53" cy="134" r="1.0"></circle><circle cx="141" cy="129" r="1.0"></circle><circle cx="78" cy="24" r="1.0"></circle><circle cx="111" cy="85" r="1.3"></circle><circle cx="133" cy="19" r="1.3"></circle><circle cx="115" cy="77" r="1.0"></circle><circle cx="68" cy="36" r="0.8"></circle><circle cx="87" cy="78" r="0.8"></circle><circle cx="22" cy="99" r="0.8"></circle><circle cx="88" cy="68" r="1.3"></circle><circle cx="75" cy="87" r="0.8"></circle><circle cx="96" cy="140" r="1.3"></circle><circle cx="83" cy="148" r="1.0"></circle><circle cx="105" cy="53" r="1.3"></circle><circle cx="34" cy="14" r="1.0"></circle><circle cx="37" cy="22" r="0.8"></circle><circle cx="29" cy="36" r="1.0"></circle><circle cx="6" cy="20" r="1.0"></circle><circle cx="76" cy="95" r="0.8"></circle><circle cx="55" cy="105" r="1.0"></circle><circle cx="127" cy="97" r="1.3"></circle></g>
                   <path d="M0 0 V66 Q6 46 0 30 Z M150 0 V74 Q143 52 150 36 Z" fill="#0b0b0c"></path>
                   <path d="M0 32 Q12 34 18 22 M6 32 Q3 20 8 12 M150 36 Q138 32 132 22 M138 30 Q142 18 139 10" fill="none" stroke="#0b0b0c" stroke-width="3.5" stroke-linecap="round"></path>
                   <path d="M0 194 Q37 182 75 194 T150 188 V294 H0 Z" fill="#262a33"></path>
@@ -734,7 +746,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                 <svg aria-hidden="true" width="394" height="314" viewBox="0 0 394 314" preserveAspectRatio="none" style="position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none">
                   <rect x="0" y="0" width="394" height="314" fill="#1a1c24"></rect>
                   <g fill="#e9e2d6" opacity="0.55"><circle cx="237" cy="149" r="1.0"></circle><circle cx="237" cy="136" r="1.3"></circle><circle cx="103" cy="53" r="1.3"></circle><circle cx="249" cy="167" r="1.3"></circle><circle cx="101" cy="30" r="1.0"></circle><circle cx="161" cy="42" r="0.8"></circle><circle cx="281" cy="183" r="1.3"></circle><circle cx="27" cy="158" r="1.0"></circle><circle cx="237" cy="173" r="1.3"></circle><circle cx="321" cy="172" r="0.8"></circle><circle cx="325" cy="9" r="1.3"></circle><circle cx="38" cy="21" r="0.8"></circle><circle cx="103" cy="67" r="1.3"></circle><circle cx="21" cy="124" r="1.0"></circle><circle cx="231" cy="157" r="0.8"></circle><circle cx="271" cy="65" r="1.3"></circle><circle cx="156" cy="133" r="0.8"></circle><circle cx="345" cy="27" r="1.0"></circle><circle cx="341" cy="77" r="1.0"></circle><circle cx="288" cy="27" r="1.3"></circle><circle cx="136" cy="86" r="0.8"></circle><circle cx="268" cy="79" r="0.8"></circle><circle cx="41" cy="150" r="0.8"></circle><circle cx="211" cy="33" r="1.0"></circle><circle cx="203" cy="23" r="0.8"></circle><circle cx="356" cy="6" r="0.8"></circle><circle cx="113" cy="19" r="1.0"></circle><circle cx="198" cy="187" r="1.0"></circle><circle cx="220" cy="24" r="1.3"></circle><circle cx="328" cy="56" r="1.3"></circle><circle cx="144" cy="92" r="0.8"></circle><circle cx="165" cy="91" r="0.8"></circle><circle cx="215" cy="36" r="0.8"></circle><circle cx="132" cy="186" r="0.8"></circle><circle cx="11" cy="21" r="1.0"></circle><circle cx="255" cy="51" r="1.3"></circle><circle cx="292" cy="54" r="1.0"></circle><circle cx="266" cy="54" r="1.3"></circle><circle cx="73" cy="113" r="1.3"></circle><circle cx="202" cy="35" r="1.0"></circle></g>
-                  <path d="M0 0 V80 Q7 54 0 36 Z M394 0 V90 Q386 62 394 44 Z" fill="#0b0b0c"></path>
+                  <path d="M0 0 V80 Q7 54 0 36 Z M394 0 V90 Q3)DKUI",
+    R"DKUI(86 62 394 44 Z" fill="#0b0b0c"></path>
                   <path d="M0 38 Q14 40 21 26 M7 38 Q3 24 9 14 M21 26 Q28 22 31 10 M21 26 Q32 32 40 28 M394 44 Q380 40 373 28 M380 38 Q384 24 381 12 M373 28 Q364 26 359 16 M373 28 Q364 36 354 36" fill="none" stroke="#0b0b0c" stroke-width="4" stroke-linecap="round"></path>
                   <path d="M0 236 Q60 222 130 232 T260 228 T394 224 V314 H0 Z" fill="#262a33"></path>
                   <path d="M0 262 Q80 250 170 260 T394 254 V314 H0 Z" fill="#2f3440" stroke="#0b0b0c" stroke-width="2"></path>
@@ -746,8 +759,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                   <path d="M0 302 Q40 294 80 300 T160 298 T240 300 T320 298 T394 296 V314 H0 Z" fill="#3a3f4a" opacity="0.85"></path>
                 </svg>
                 <span style="position: absolute; left: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: #8a9097; border: 1.5px solid #0b0b0c"></span>
-                <span style="position: absolute; right: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; ba)DKUI",
-    R"DKUI(ckground: #8a9097; border: 1.5px solid #0b0b0c"></span>
+                <span style="position: absolute; right: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: #8a9097; border: 1.5px solid #0b0b0c"></span>
                 <span style="position: absolute; left: 7px; bottom: 7px; width: 8px; height: 8px; border-radius: 50%; background: #8a9097; border: 1.5px solid #0b0b0c"></span>
                 <span style="position: absolute; right: 7px; bottom: 7px; width: 8px; height: 8px; border-radius: 50%; background: #8a9097; border: 1.5px solid #0b0b0c"></span>
                 <div style="display: flex; justify-content: center; gap: 22px; width: 100%">
@@ -814,7 +826,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
                   <div style="background: #8a9097; border: 3px solid #0b0b0c; border-radius: 34px 34px 3px 3px; padding: 7px 18px 4px; display: flex; flex-direction: column; align-items: center; box-shadow: 3px 3px 0 #0b0b0c; margin-bottom: 18px">
                     <span style="font-family: 'Cinzel', Georgia, serif; font-size: 20px; font-weight: 700; letter-spacing: 0.22em; color: #15171b; line-height: 1.1">WRAITH</span>
                     <span style="font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: 0.2em; color: #2a2d33">OCTAVE FUZZ \u00b7 CHOPPER</span>
-                  </div>
+                  </di)DKUI",
+    R"DKUI(v>
                   <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
                     <button onPointerDown="${v.w?.chop?.down}" onPointerUp="${v.w?.chop?.up}" onPointerLeave="${v.w?.chop?.leave}" aria-label="${v.w?.chop?.aria}" style="width: 64px; height: 64px; background: none; border: 0; padding: 0; touch-action: none">
                       <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
@@ -842,8 +855,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px; border-radius: 8px; border: 3px solid #0b0b0c">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
           <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
-          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy=)DKUI",
-    R"DKUI("243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
+          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
           <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c" stroke-width="6" stroke-linecap="round"></path>
@@ -896,7 +908,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
             <button onClick="${v.engine?.loadModel}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; flex-shrink: 0">Load capture\u2026</button>
           </div>
           ${(v.engine?.hasTypes) ? html`
-            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
+        )DKUI",
+    R"DKUI(    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
               <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #15171b">JUMP TO</span>
               ${(v.engine?.modelTypes || []).map((t) => html`
                 <button onClick="${t?.pick}" style="${t?.style}">${t?.label}</button>
@@ -918,8 +931,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
 
     
     ${(v.is?.cab) ? html`
-      <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px; border-ra)DKUI",
-    R"DKUI(dius: 8px; border: 3px solid #0b0b0c">
+      <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 16px; border-radius: 8px; border: 3px solid #0b0b0c">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
           <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
           <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
@@ -969,7 +981,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
               <div style="flex-grow: 1; min-width: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 10px 12px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${v.engine?.irText}</div>
               <button onClick="${v.engine?.prevIR}" aria-label="Previous IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u2039</button>
               <button onClick="${v.engine?.nextIR}" aria-label="Next IR in folder" style="width: 42px; height: 42px; border-radius: 50%; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; box-shadow: 3px 3px 0 #0b0b0c; font-size: 22px; line-height: 1; flex-shrink: 0">\u203a</button>
-              <button onClick="${v.engine?.loadIR}" style="height: 42px; padding: 0 16px; background: #15171b; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; flex-shrink: 0">Load IR\u2026</button>
+              <button onClick="${v.engine?.loadIR}" style="height: 42px; padding: 0 16px; background: #15171b)DKUI",
+    R"DKUI(; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 5px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px; flex-shrink: 0">Load IR\u2026</button>
             </div>
           </div>
           <div style="display: flex; gap: 14px">
@@ -989,8 +1002,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
     ${(v.is?.eq) ? html`
       <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; border-radius: 8px; border: 3px solid #0b0b0c; padding: 18px 24px; display: flex; flex-direction: column; gap: 16px">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
-          <rect x="0" y="0" width="1)DKUI",
-    R"DKUI(050" height="546" fill="#1a1c24"></rect>
+          <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
           <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
@@ -1035,7 +1047,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; width: 46px">
                 <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #e9e2d6; background: #15171b; border-radius: 3px; padding: 1px 3px; white-space: nowrap">${e?.value}</div>
                 <button onPointerDown="${e?.down}" onPointerMove="${e?.move}" onPointerUp="${e?.up}" onPointerCancel="${e?.up}" onDblClick="${e?.reset}" onKeyDown="${e?.key}" aria-label="${e?.aria}" style="width: 28px; height: 160px; padding: 0; background: none; border: 0; position: relative; touch-action: none; cursor: ns-resize">
-                  <span style="position: absolute; left: 10px; top: 0; bottom: 0; width: 8px; background: #15171b; border: 2px solid #0b0b0c; box-sizing: border-box; border-radius: 4px"></span>
+                  <span style="position: absolute; left: 10px; top: 0; bottom: 0; width: 8px; bac)DKUI",
+    R"DKUI(kground: #15171b; border: 2px solid #0b0b0c; box-sizing: border-box; border-radius: 4px"></span>
                   <span style="position: absolute; left: 6px; right: 6px; top: 79px; height: 2px; background: #4a5158"></span>
                   <span style="${e?.handle}"></span>
                 </button>
@@ -1052,8 +1065,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
       <div style="position: relative; isolation: isolate; overflow: hidden; flex-grow: 1; border-radius: 8px; border: 3px solid #0b0b0c; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px">
         <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1050 546" preserveAspectRatio="none" style="position: absolute; inset: 0; z-index: -1">
           <rect x="0" y="0" width="1050" height="546" fill="#1a1c24"></rect>
-          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" )DKUI",
-    R"DKUI(r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
+          <g fill="#e9e2d6" opacity="0.5"><circle cx="958" cy="164" r="1.2"></circle><circle cx="557" cy="43" r="0.9"></circle><circle cx="23" cy="94" r="1.6"></circle><circle cx="959" cy="237" r="1.6"></circle><circle cx="175" cy="93" r="1.6"></circle><circle cx="93" cy="194" r="1.2"></circle><circle cx="356" cy="188" r="1.2"></circle><circle cx="875" cy="48" r="0.9"></circle><circle cx="497" cy="21" r="0.9"></circle><circle cx="281" cy="137" r="1.6"></circle><circle cx="139" cy="206" r="1.6"></circle><circle cx="795" cy="210" r="1.6"></circle><circle cx="218" cy="243" r="1.2"></circle><circle cx="429" cy="180" r="0.9"></circle><circle cx="873" cy="235" r="0.9"></circle><circle cx="556" cy="241" r="0.9"></circle><circle cx="822" cy="79" r="1.2"></circle><circle cx="98" cy="59" r="1.6"></circle><circle cx="20" cy="233" r="1.2"></circle><circle cx="122" cy="237" r="1.2"></circle><circle cx="1017" cy="43" r="0.9"></circle><circle cx="494" cy="116" r="1.6"></circle><circle cx="239" cy="254" r="1.6"></circle><circle cx="17" cy="39" r="1.6"></circle><circle cx="414" cy="237" r="0.9"></circle><circle cx="686" cy="10" r="0.9"></circle><circle cx="282" cy="146" r="0.9"></circle><circle cx="1035" cy="29" r="1.6"></circle><circle cx="1027" cy="145" r="0.9"></circle><circle cx="870" cy="25" r="1.2"></circle><circle cx="403" cy="171" r="0.9"></circle><circle cx="307" cy="52" r="1.6"></circle><circle cx="94" cy="21" r="1.2"></circle><circle cx="315" cy="198" r="1.2"></circle><circle cx="80" cy="39" r="1.6"></circle><circle cx="834" cy="251" r="0.9"></circle><circle cx="341" cy="164" r="1.6"></circle><circle cx="98" cy="196" r="1.2"></circle><circle cx="187" cy="230" r="1.2"></circle><circle cx="235" cy="229" r="1.6"></circle><circle cx="758" cy="123" r="0.9"></circle><circle cx="833" cy="58" r="1.6"></circle><circle cx="47" cy="105" r="1.6"></circle><circle cx="683" cy="8" r="1.2"></circle><circle cx="238" cy="62" r="0.9"></circle><circle cx="919" cy="77" r="1.2"></circle><circle cx="191" cy="86" r="1.6"></circle><circle cx="593" cy="34" r="1.6"></circle><circle cx="122" cy="14" r="1.2"></circle><circle cx="887" cy="135" r="1.2"></circle><circle cx="518" cy="152" r="1.6"></circle><circle cx="145" cy="116" r="1.6"></circle><circle cx="482" cy="32" r="1.2"></circle><circle cx="773" cy="252" r="1.6"></circle><circle cx="766" cy="43" r="1.6"></circle><circle cx="604" cy="51" r="1.6"></circle><circle cx="540" cy="15" r="0.9"></circle><circle cx="363" cy="75" r="0.9"></circle><circle cx="256" cy="163" r="0.9"></circle><circle cx="34" cy="20" r="0.9"></circle><circle cx="932" cy="61" r="1.2"></circle><circle cx="612" cy="164" r="0.9"></circle><circle cx="736" cy="80" r="0.9"></circle><circle cx="994" cy="151" r="1.2"></circle><circle cx="291" cy="254" r="0.9"></circle><circle cx="616" cy="186" r="0.9"></circle><circle cx="144" cy="115" r="1.2"></circle><circle cx="301" cy="188" r="1.6"></circle><circle cx="794" cy="158" r="0.9"></circle><circle cx="571" cy="205" r="1.6"></circle></g>
           <circle cx="930" cy="70" r="30" fill="#e9e2d6" opacity="0.9"></circle><circle cx="944" cy="60" r="27" fill="#1a1c24"></circle>
           <path d="M0 0 V170 Q14 110 0 70 Z M1050 0 V150 Q1036 100 1050 60 Z" fill="#0b0b0c"></path>
           <path d="M0 74 Q30 78 44 50 M14 76 Q6 46 20 26 M44 50 Q60 40 66 18 M1050 64 Q1020 60 1006 34 M1022 60 Q1030 34 1024 14" fill="none" stroke="#0b0b0c" stroke-width="6" stroke-linecap="round"></path>
@@ -1062,10 +1074,10 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           <g fill="#3d434f" stroke="#0b0b0c" stroke-width="3" stroke-linejoin="round"><path d="M40 360 V318 Q40 298 62 298 Q84 298 84 318 V360 Z"></path><path d="M980 352 V318 H966 V304 H980 V288 H994 V304 H1008 V318 H994 V352 Z"></path></g>
           <path d="M0 520 Q130 504 260 516 T520 512 T780 516 T1050 508 V546 H0 Z" fill="#3a3f4a" opacity="0.85"></path>
         </svg>
-        <div style="font-family: 'Cinzel', Georgia, serif; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; color: #15171b; background: #8a9097; border: 3px solid #0b0b0c; border-radius: 22px 22px 3px 3px; padding: 6px 16px 4px; box-shadow: 3px 3px 0 #0b0b0c">TUNER \u00b7 OUTPUT MUTED</div>
+        <div style="font-family: 'Cinzel', Georgia, serif; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; color: #15171b; background: #8a9097; border: 3px solid #0b0b0c; border-radius: 22px 22px 3px 3px; padding: 6px 16px 4px; box-shadow: 3px 3px 0 #0b0b0c">${v.tuner?.title}</div>
         <div style="display: flex; align-items: baseline; gap: 10px">
-          <span style="font-family: 'Cinzel', Georgia, serif; font-size: 120px; font-weight: 700; line-height: 1; color: ${v.tuner?.color}; text-shadow: 4px 4px 0 #0b0b0c">E</span>
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; color: #e9e2d6; text-shadow: 0 1px 0 #0b0b0c">2</span>
+          <span style="font-family: 'Cinzel', Georgia, serif; font-size: 120px; font-weight: 700; line-height: 1; color: ${v.tuner?.color}; text-shadow: 4px 4px 0 #0b0b0c">${v.tuner?.note}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; color: #e9e2d6; text-shadow: 0 1px 0 #0b0b0c">${v.tuner?.oct}</span>
         </div>
         <div style="width: 560px; display: flex; flex-direction: column; gap: 6px">
           <div style="height: 44px; position: relative; background: #121216; border: 4px solid #0b0b0c; border-radius: 8px; box-shadow: inset 0 0 0 2px #6c7379, 4px 4px 0 #0b0b0c">
@@ -1096,7 +1108,8 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
           <path d="M0 520 Q130 504 260 516 T520 512 T780 516 T1050 508 V546 H0 Z" fill="#3a3f4a" opacity="0.85"></path>
         </svg>
         <div style="display: flex; justify-content: space-between; align-items: center">
-          <div style="font-family: 'Cinzel', Georgia, serif; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; color: #e9e2d6; text-shadow: 0 2px 0 #0b0b0c">SETTINGS</div>
+          <div style="font-family: 'Cinzel', Georgia, serif; font-size: 24px; font-weight: 700)DKUI",
+    R"DKUI(; letter-spacing: 0.14em; color: #e9e2d6; text-shadow: 0 2px 0 #0b0b0c">SETTINGS</div>
           <button onClick="${v.closeSettings}" style="height: 40px; padding: 0 18px; background: #3d434f; color: #e9e2d6; border: 3px solid #0b0b0c; border-radius: 6px; box-shadow: 3px 3px 0 #0b0b0c; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 14px">Done</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
@@ -1132,8 +1145,7 @@ button:focus-visible{outline:2px solid #d9b46a;outline-offset:2px}
   </div>
 
   
-  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; background: #1b1e21; b)DKUI",
-    R"DKUI(order-top: 1px solid #3a4046; font-size: 12px; color: #9aa1a8; font-family: 'IBM Plex Mono', monospace">
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; background: #1b1e21; border-top: 1px solid #3a4046; font-size: 12px; color: #9aa1a8; font-family: 'IBM Plex Mono', monospace">
     <span>${v.footerTuner}</span>
     <span>${v.footerInfo}</span>
   </div>
@@ -1250,7 +1262,8 @@ class Component extends DCLogic {
     gatePedal.stompCap = 'transform: translateY(' + (on.gate ? 3 : 0) + 'px); transition: transform 80ms;';
     const doorK = gateOpen && on.gate ? 0.18 : on.gate ? 1 : 0.18;
     gatePedal.doorL = 'transform-origin: 24px 60px; transform: scaleX(' + doorK + '); transition: transform ' + (hard ? 70 : 260) + 'ms ease-out;';
-    gatePedal.doorR = 'transform-origin: 100px 60px; transform: scaleX(' + doorK + '); transition: transform ' + (hard ? 70 : 260) + 'ms ease-out;';
+    gatePedal.doorR = 'transform-origin: 100px 60px; transform:)DKUI",
+    R"DKUI( scaleX(' + doorK + '); transition: transform ' + (hard ? 70 : 260) + 'ms ease-out;';
     gatePedal.glow = 'fill: ' + (!on.gate ? '#1a1c1f' : gateOpen ? '#5ee08a' : '#3a0d0d') + '; opacity: ' + (!on.gate ? 1 : gateOpen ? 0.35 + 0.25 * sig : 0.8) + '; transition: fill 120ms, opacity 120ms;';
     gatePedal.modeStyle = "font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; min-width: 46px; color: " + (!on.gate ? '#6c7379' : gateOpen ? '#5ee08a' : '#ff4b3e') + ';';
     gatePedal.hardToggle = toggle('gateHard');
@@ -1273,8 +1286,7 @@ class Component extends DCLogic {
     const wt = get('wah_Pedal');
     wah.lid = 'transform: translateY(' + (wt * 14).toFixed(1) + 'px) scaleY(' + (1 - wt * 0.06).toFixed(3) + '); transform-origin: 58px 164px; transition: transform 60ms;';
     wah.inside = 'fill: ' + (on.wah ? '#5ee08a' : '#2f3440') + '; opacity: ' + (on.wah ? (0.25 + wt * 0.75).toFixed(2) : 1) + ';';
-    const pitch = mkPedal({ id: 'pitch)DKUI",
-    R"DKUI(', name: 'Pitch', mode: '\u00b112 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.5, semis], ['Mix', 1, pct]] });
+    const pitch = mkPedal({ id: 'pitch', name: 'Pitch', mode: '\u00b112 ST', color: '#1a1c24', edge: '#0b0b0c', knobs: [['Shift', 0.5, semis], ['Mix', 1, pct]] });
     const shiftSt = Math.round(-12 + 24 * get('pitch_Shift'));
     const bellY = Math.round(-shiftSt * 3.1 + 14);
     Object.assign(pitch, { isStd: false, isPitchP: true, w: 160, h: 320, jy: 66, cardExtra: flatCard, stompCap: cap(on.pitch), tilt: -13, dx: -40, dy: 46,
@@ -1363,7 +1375,8 @@ class Component extends DCLogic {
       statusColor: chopOn ? '#ff8a3d' : trashOn ? '#ff3b30' : '#6c7379'
     };
     const wSwitches = [['TRASH', trashOn], ['CHOP', chopPulse]].map((x) => ({ label: x[0], led: x[1] ? '#ff3b3b' : '#3a2020' }));
-    const wraithBig = { id: 'wraith', isStd: false, isWah: false, isBig: true, w: 400, h: 330, jy: 92, color: '#1a1c24', edge: '#0b0b0c', knobs: wKnobs,
+    const wraithBig = { id: 'wraith', isStd: false, isWah: false, isBig: true, w: 400, h: 330, jy: 92, color)DKUI",
+    R"DKUI(: '#1a1c24', edge: '#0b0b0c', knobs: wKnobs,
       cardExtra: ' background: #1a1c24; overflow: hidden; box-shadow: 6px 10px 0 rgba(0,0,0,0.5);' };
 
     // floor scenes
@@ -1391,8 +1404,7 @@ class Component extends DCLogic {
     if (board.length) {
       // jack position on a pedal's side, following the pedal's rotation
       const jack = (q, right) => { const r0 = (q.rotDeg || 0) * Math.PI / 180, cx0 = q.x + q.w / 2, cy0 = q.y + q.h / 2, dx = (right ? q.w - 6 : 6) - q.w / 2, dy = q.jy - q.h / 2;
-        return [Math.round(cx0 + dx * Math.cos(r0) - dy * Math.sin(r)DKUI",
-    R"DKUI(0)), Math.round(cy0 + dx * Math.sin(r0) + dy * Math.cos(r0))]; };
+        return [Math.round(cx0 + dx * Math.cos(r0) - dy * Math.sin(r0)), Math.round(cy0 + dx * Math.sin(r0) + dy * Math.cos(r0))]; };
       const f = board[0], [fx0, fy0] = jack(f, false);
       if (view === 'gate') {
         // input comes from the jack on the reaper's scythe guitar (svg at 30,30, rotated -12deg about 130,235)
@@ -1426,7 +1438,7 @@ class Component extends DCLogic {
     const mixerCh = [0.7, 0.55, 0.8, 0.4, 0.65, 0.5].map((v, i) => ({
       knob: 'width: 12px; height: 12px; border-radius: 50%; background: ' + ['#c0393b', '#e0b44a', '#4a7f9e', '#6fbf73', '#c0393b', '#e0b44a'][i] + '; border: 2px solid #0b0b0c; box-sizing: border-box;',
       fader: 'position: absolute; left: -6px; width: 16px; height: 8px; border-radius: 2px; background: #d5d9dd; border: 1.5px solid #0b0b0c; box-sizing: border-box; top: ' + Math.round((1 - v) * 44) + 'px;' }));
-    // master FX volume: -inf..+6 dB, drives the mixer lights and the OUT meter
+    // FX volume: -inf..+6 dB, the level of the FX pedals (Stereo Chorus, Delay, Reverb)
     // doubler (top bar): one copy hard left, a delayed copy hard right
     const dk = K('dbl_Delay', 'Doubler L/R delay', 0.35, lin(5, 40, 0, ' ms'));
     const dOff = Math.round(1 + get('dbl_Delay') * 4);
@@ -1435,6 +1447,8 @@ class Component extends DCLogic {
       splitL: on.doubler ? 'M8 10 C12 10 14 3 24 3' : 'M8 10 H24', splitR: on.doubler ? 'M8 10 C' + (12 + dOff) + ' 10 ' + (14 + dOff) + ' 17 24 17' : 'M8 10 H24',
       btn: 'height: 30px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; ' + (on.doubler ? 'background: ' + accent + '; color: #1b1e21; border: 1px solid ' + accent + ';' : 'background: #2e3338; color: #c9ced3; border: 1px solid #4a5158;'),
       led: 'width: 7px; height: 7px; border-radius: 50%; background: ' + (on.doubler ? '#ff4b3e; box-shadow: 0 0 6px 2px rgba(255,75,62,0.7)' : '#3a2020') + ';' };
+    const masterIn = K('m_In', 'Master input', 0.6667, sgn(-24, 12, 1, ' dB'));
+    const masterOut = K('m_Out', 'Master output', 0.6667, sgn(-24, 12, 1, ' dB'));
     const fxVol = K('fx_Volume', 'FX volume', 0.857, (t) => t < 0.01 ? '-inf dB' : sgn(-36, 6, 1, ' dB')(t));
     const volT = get('fx_Volume');
     const mixLvl = view === 'fx' ? Math.round((0.15 + 0.4 * noise(7)) * 10 * volT * 1.25) : 0;
@@ -1489,7 +1503,8 @@ class Component extends DCLogic {
     const cabIdx = st.cab ?? 0;
     const cabTolex = ['#22252b', '#3a2a20', '#7a1f22', '#e9e2d6', '#1f4a2c'];
     const cabCar = carousel(cabs, cabIdx, (i) => this.setState({ cab: (i + cabs.length) % cabs.length }), (c, main) => {
-      const sz = main ? (c.n === 1 ? 104 : c.n === 2 ? 84 : 62) : (c.n === 1 ? 64 : c.n === 2 ? 52 : 38);
+      const sz = main ? (c.n === 1 ? 104 : c.n === 2 ? 84 : 62) : (c.n ==)DKUI",
+    R"DKUI(= 1 ? 64 : c.n === 2 ? 52 : 38);
       const ci = cabs.indexOf(c);
       return {
         name: c.name, sub: c.sub, nameFs: main ? '20px' : '14px',
@@ -1521,8 +1536,7 @@ class Component extends DCLogic {
       { k: 'hm', label: 'HIGH MID', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 1600 },
       { k: 'hi', label: 'HIGH', def: 0.5, fmt: sgn(-12, 12, 1, ' dB'), f: () => 4000 },
       { k: 'hc', label: 'HIGH CUT', def: 1, fmt: logf(3000, 20000), f: (t) => 3000 * Math.pow(20000 / 3000, t) }
-    ])DKUI",
-    R"DKUI(;
+    ];
     eqDefs.forEach((e) => { defs[sk + 'eq_' + e.k] = e.def; });
     const ev = eqDefs.map((e) => get(sk + 'eq_' + e.k));
     const W = 560, H = 220, mid = 110, dbScale = 55 / 12;
@@ -1568,10 +1582,11 @@ class Component extends DCLogic {
     const muted = view === 'tuner' && opt.mute === 'On';
     const meters = {
       inL: bar((0.35 + 0.35 * noise(0)) * (0.6 + inGain * 0.8)), inR: bar((0.35 + 0.35 * noise(1)) * (0.6 + inGain * 0.8)),
-      outL: bar(muted ? 0 : (0.4 + 0.3 * noise(2)) * (0.4 + outGain) * volT * 1.25), outR: bar(muted ? 0 : (0.4 + 0.3 * noise(on.doubler ? 3 + get('dbl_Delay') * 2 : 2)) * (0.4 + outGain) * volT * 1.25)
+      outL: bar(muted ? 0 : (0.4 + 0.3 * noise(2)) * (0.4 + outGain) * get('m_Out') * 1.5), outR: bar(muted ? 0 : (0.4 + 0.3 * noise(on.doubler ? 3 + get('dbl_Delay') * 2 : 2)) * (0.4 + outGain) * get('m_Out') * 1.5)
     };
     const cents = Math.round(Math.sin(tick * 0.18) * 5 - 3);
     const tuner = {
+      note: 'E', oct: '2', title: 'TUNER' + (opt.mute === 'On' ? ' \u00b7 OUTPUT MUTED' : ''),
       color: Math.abs(cents) <= 2 ? '#6fbf73' : accent,
       needle: 'position: absolute; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; background: ' + (Math.abs(cents) <= 2 ? '#6fbf73' : accent) + '; left: calc(' + (50 + cents) + '% - 2px);',
       text: (82.41 * Math.pow(2, cents / 1200)).toFixed(1) + ' Hz \u00b7 ' + (cents === 0 ? 'in tune' : Math.abs(cents) + ' cents ' + (cents < 0 ? 'flat' : 'sharp')) + ' \u00b7 A = ' + opt.ref + ' Hz'
@@ -1597,7 +1612,7 @@ class Component extends DCLogic {
     const cabBox = 'width: 72px; height: 72px; box-sizing: border-box; border-radius: 6px; background: #141618; border: 1px solid #4a5158; padding: 7px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 4px 0;' + (on.cab ? '' : ' opacity: 0.45;');
 
     return {
-      accent, m, is, isBoard, isGate: view === 'gate', gateMini: gatePedal.knobs[0], gateMiniColor: on.gate && get('gate_Gate') >= 0.01 ? (gateOpen ? '#5ee08a' : '#ff4b3e') : '#6c7379', isFx: view === 'fx', fxVol, dbl, notGate: view !== 'gate', reaper, board, cables, boardTitle: titles[view] || '', boardHint: hints[view] || '', mixerCh, mixerLeds,
+      accent, m, is, isBoard, isGate: view === 'gate', gateMini: gatePedal.knobs[0], gateMiniColor: on.gate && get('gate_Gate') >= 0.01 ? (gateOpen ? '#5ee08a' : '#ff4b3e') : '#6c7379', isFx: view === 'fx', fxVol, masterIn, masterOut, dbl, notGate: view !== 'gate', reaper, board, cables, boardTitle: titles[view] || '', boardHint: hints[view] || '', mixerCh, mixerLeds,
       w, wSwitches, pitchMini, pedals, fxPedals, slots, slot, ampCar, ampPlate, ampMiniFace, cabCar, cabCur, ampKnobs, cabKnobs,
       eqBands, eqMini, eqPath, eqFill, eqDots, cabBox, meters, tuner, settings,
       tunerBtn: iconBtn(view === 'tuner'), settingsBtn: iconBtn(view === 'settings'),
@@ -1625,7 +1640,8 @@ const DK = (() => {
 
   // Pedals, EQ and FX: [gui key, default, type (0 knob, 1 switch, 2 three-way), scope (0 on, 1 vals, 2 per amp slot, 3 state)].
   // Filled in by tools/build_ui.py from kDKParams in NeuralAmpModeler/DKEffects.h; engine index = DK_FIRST + row.
-  const DKP = [["pitch", 0.0, 1, 0], ["pitch_Shift", 0.5, 0, 1], ["pitch_Mix", 1.0, 0, 1], ["wah", 0.0, 1, 0], ["wah_Pedal", 0.45, 0, 1], ["wah_Q", 0.5, 0, 1], ["wtrash", 0.0, 1, 0], ["wr_Detune", 0.3, 0, 1], ["wr_Square", 0.7, 0, 1], ["wr_Octave", 0.5, 0, 1], ["wOct", 0.0, 2, 3], ["comp", 0.0, 1, 0], ["comp_Sustain", 0.55, 0, 1], ["comp_Attack", 0.4, 0, 1], ["comp_Level", 0.6, 0, 1], ["drive", 0.0, 1, 0], ["drive_Drive", 0.2, 0, 1], ["drive_Tone", 0.6, 0, 1], ["drive_Level", 0.8, 0, 1], ["boost", 0.0, 1, 0], ["boost_Gain", 0.5, 0, 1], ["phaser", 0.0, 1, 0], ["phaser_Rate", 0.3, 0, 1], ["phaser_Depth", 0.6, 0, 1], ["chorus", 0.0, 1, 0], ["chorus_Rate", 0.35, 0, 1], ["chorus_Depth", 0.5, 0, 1], ["chorus_Mix", 0.5, 0, 1], ["flanger", 0.0, 1, 0], ["flanger_Rate", 0.2, 0, 1], ["flanger_Depth", 0.7, 0, 1], ["flanger_Fdbk", 0.4, 0, 1], ["pres", 0.5, 0, 2], ["eq_lc", 0.0, 0, 2], ["eq_lo", 0.5, 0, 2], ["eq_lm", 0.5, 0, 2], ["eq_hm", 0.5, 0, 2], ["eq_hi", 0.5, 0, 2], ["eq_hc", 1.0, 0, 2], ["c_mix", 1.0, 0, 1], ["c_lvl", 0.5, 0, 1], ["c_room", 0.0, 0, 1], ["doubler", 0.0, 1, 0], ["dbl_Delay", 0.35, 0, 1], ["schorus", 0.0, 1, 0], ["schorus_Rate", 0.3, 0, 1], ["schorus_Depth", 0.45, 0, 1], ["schorus_Mix", 0.3, 0, 1], ["delay", 0.0, 1, 0], ["delay_Time", 0.5, 0, 1], ["delay_Fdbk", 0.35, 0, 1], ["delay_Mix", 0.25, 0, 1], ["reverb", 0.0, 1, 0], ["reverb_Size", 0.6, 0, 1], ["reverb_Decay", 0.45, 0, 1], ["reverb_Mix", 0.18, 0, 1], ["fx_Volume", 0.857, 0, 1], ["gateHard", 1.0, 1, 0]];
+  const DKP = [["pitch", 0.0, 1, 0], ["pitch_Shift", 0.5, 0, 1], ["pitch_Mix", 1.0, 0, 1], ["wah", 0.0, 1, 0], ["wah_Pedal", 0.45, 0, 1], ["wah_Q", 0.5, 0, 1], ["wtrash", 0.0, 1, 0], ["wr_Detune", 0.3, 0, 1], ["wr_Square", 0.7, 0, 1], ["wr_Octave", 0.5, 0, 1], ["wOct", 0.0, 2, 3], ["comp", 0.0, 1, 0], ["comp_Sustain", 0.55, 0, 1], ["comp_Attack", 0.4, 0, 1], ["comp_Level", 0.6, 0, 1], ["drive", 0.0, 1, 0], ["drive_Drive", 0.2, 0, 1], ["drive_Tone", 0.6, 0, 1], ["drive_Level", 0.8, 0, 1], ["boost", 0.0, 1, 0], ["boost_Gain", 0.5, 0, 1], ["phaser", 0.0, 1, 0], ["phaser_Rate", 0.3, 0, 1], ["phaser_Depth", 0.6, 0, 1], ["chorus", 0.0,)DKUI",
+    R"DKUI( 1, 0], ["chorus_Rate", 0.35, 0, 1], ["chorus_Depth", 0.5, 0, 1], ["chorus_Mix", 0.5, 0, 1], ["flanger", 0.0, 1, 0], ["flanger_Rate", 0.2, 0, 1], ["flanger_Depth", 0.7, 0, 1], ["flanger_Fdbk", 0.4, 0, 1], ["pres", 0.5, 0, 2], ["eq_lc", 0.0, 0, 2], ["eq_lo", 0.5, 0, 2], ["eq_lm", 0.5, 0, 2], ["eq_hm", 0.5, 0, 2], ["eq_hi", 0.5, 0, 2], ["eq_hc", 1.0, 0, 2], ["c_mix", 1.0, 0, 1], ["c_lvl", 0.5, 0, 1], ["c_room", 0.0, 0, 1], ["doubler", 0.0, 1, 0], ["dbl_Delay", 0.35, 0, 1], ["schorus", 0.0, 1, 0], ["schorus_Rate", 0.3, 0, 1], ["schorus_Depth", 0.45, 0, 1], ["schorus_Mix", 0.3, 0, 1], ["delay", 0.0, 1, 0], ["delay_Time", 0.5, 0, 1], ["delay_Fdbk", 0.35, 0, 1], ["delay_Mix", 0.25, 0, 1], ["reverb", 0.0, 1, 0], ["reverb_Size", 0.6, 0, 1], ["reverb_Decay", 0.45, 0, 1], ["reverb_Mix", 0.18, 0, 1], ["fx_Volume", 0.857, 0, 1], ["gateHard", 1.0, 1, 0], ["m_In", 0.6667, 0, 1], ["m_Out", 0.6667, 0, 1]];
   const DK_FIRST = P.chopRate + 1;
 
   const clamp = (x) => Math.max(0, Math.min(1, x));
@@ -1642,7 +1658,9 @@ const DK = (() => {
   const gateToEngine = (t) => ((-90 + 70 * t) + 100) / 100;
   const gateFromEngine = (n) => clamp(((-100 + 100 * n) + 90) / 70);
 
-  const state = { model: '', ir: '', inLvl: 0, outLvl: 0, live: false, models: [], modelIdx: -1, irs: [], irIdx: -1 };
+  const state = { model: '', ir: '', inLvl: 0, outLvl: 0, live: false, models: [], modelIdx: -1, irs: [], irIdx: -1,
+    tunerHz: 0, tunerSmooth: 0, userPresets: [], preset: 'Empty Grave' };
+  const tunerSent = { on: null, mute: null };
 
   // Capture tone types (from the .nam file's metadata), in the order the plugin sorts them
   const TYPES = [
@@ -1673,8 +1691,7 @@ const DK = (() => {
     st = st || {};
     const vals = st.vals || {};
     const on = Object.assign({ gate: true, cab: true }, st.on || {});
-    const sk)DKUI",
-    R"DKUI( = 'a' + (st.slot ?? 2) + '_';
+    const sk = 'a' + (st.slot ?? 2) + '_';
     const val = (id, def) => (vals[id] ?? def);
     sendParam(P.input, inToEngine(val(sk + 'in', 0.5)));
     sendParam(P.output, outToEngine(val(sk + 'out', 0.6)));
@@ -1733,6 +1750,158 @@ const DK = (() => {
     });
   };
 
+
+  // ---- Presets -------------------------------------------------------------------------
+  // Factory presets: only what differs from the defaults. Keys are the GUI keys of the pedals
+  // (see DKP), plus gateDb (gate threshold, dB, or null for off), bass/mid/treble (0..10).
+  const FACTORY = [
+    { name: 'Empty Grave', p: {} },
+    { name: 'Last Rites', p: { gateDb: -62, drive: 1, drive_Drive: 0.08, drive_Tone: 0.55, drive_Level: 0.9, eq_lc: 0.3, eq_lm: 0.44, eq_hm: 0.56, eq_hc: 0.82, pres: 0.56, doubler: 1, dbl_Delay: 0.3, reverb: 1, reverb_Size: 0.3, reverb_Decay: 0.25, reverb_Mix: 0.1 } },
+    { name: 'Funeral March', p: { gateDb: -65, drive: 1, drive_Drive: 0.45, drive_Tone: 0.45, drive_Level: 0.75, eq_lo: 0.62, eq_hi: 0.44, eq_hc: 0.7, delay: 1, delay_Time: 1 / 6, delay_Fdbk: 0.3, delay_Mix: 0.15, reverb: 1, reverb_Size: 0.85, reverb_Decay: 0.7, reverb_Mix: 0.25 } },
+    { name: 'Gravedigger Lead', p: { gateDb: -70, boost: 1, boost_Gain: 0.6, drive: 1, drive_Drive: 0.35, drive_Tone: 0.6, drive_Level: 0.8, eq_hm: 0.6, delay: 1, delay_Time: 2 / 6, delay_Fdbk: 0.35, delay_Mix: 0.22, reverb: 1, reverb_Size: 0.6, reverb_Mix: 0.15 } },
+    { name: 'Toll of Doom', p: { gateDb: -55, gateHard: 1, pitch: 1, pitch_Shift: 0, pitch_Mix: 0.5, boost: 1, boost_Gain: 0.4, eq_lc: 0.15, eq_lo: 0.6, eq_hc: 0.75 } },
+    { name: 'Whammy from the Crypt', p: { pitch: 1, pitch_Shift: 1, pitch_Mix: 1, drive: 1, drive_Drive: 0.25, drive_Level: 0.85, delay: 1, delay_Time: 0.5, delay_Mix: 0.18, reverb: 1, reverb_Mix: 0.12 } },
+    { name: 'Banshee Wail', p: { gateDb: -60, wtrash: 1, wOct: 1, wr_Octave: 0.7, wr_Square: 0.8, wr_Detune: 0.35, wah: 1, wah_Pedal: 0.7, wah_Q: 0.6, delay: 1, delay_Time: 0.5, delay_Fdbk: 0.3, delay_Mix: 0.2 } },
+    { name: 'Requiem Clean', p: { gateDb: -80, comp: 1, comp_Sustain: 0.45, comp_Attack: 0.5, schorus: 1, schorus_Rate: 0.25, schorus_Depth: 0.4, schorus_Mix: 0.35, reverb: 1, reverb_Size: 0.55, reverb_Decay: 0.45, reverb_Mix: 0.2, eq_hi: 0.56 } },
+    { name: 'S\u00e9ance', p: { gateDb: -75, comp: 1, comp_Sustain: 0.5, chorus: 1, chorus_Rate: 0.25, chorus_Depth: 0.5, chorus_Mix: 0.4, schorus: 1, schorus_Mix: 0.35, delay: 1, delay_Time: 2 / 6, delay_Fdbk: 0.45, delay_Mix: 0.3, reverb: 1, reverb_Size: 0.9, reverb_Decay: 0.8, reverb_Mix: 0.35 } },
+    { name: 'Phantom Phase', p: { phaser: 1, phaser_Rate: 0.2, phaser_Depth: 0.75, delay: 1, delay_Time: 0.5, delay_Fdbk: 0.25, delay_Mix: 0.15 } },
+    { name: 'Vortex of Souls', p: { flanger: 1, flanger_Rate: 0.12, flanger_Depth: 0.8, flanger_Fdbk: 0.6, reverb: 1, reverb_Size: 0.7, reverb_Mix: 0.2 } },
+    { name: 'Choir of the Dead', p: { chorus: 1, chorus_Rate: 0.3, chorus_Depth: 0.6, chorus_Mix: 0.5, schorus: 1, schorus_Mix: 0.4, delay: 1, delay_Time: 1 / 6, delay_Fdbk: 0.4, delay_Mix: 0.2, reverb: 1, reverb_Size: 0.95, reverb_Decay: 0.9, reverb_Mix: 0.4 } },
+    { name: 'Catacomb Drone', p: { comp: 1, comp_Sustain: 0.8, delay: 1, delay_Time: 0, delay_Fdbk: 0.6, delay_Mix: 0.3, reverb: 1, reverb_Size: 1, reverb_Decay: 1, reverb_Mix: 0.5, eq_hc: 0.6 } }
+  ];
+  // Normalized engine values for a factory preset: defaults, then the preset's own settings.
+  const presetValues = (p) => {
+    const v = {};
+    v[P.input] = 0.5; v[P.output] = 0.5;
+    v[P.bass] = (p.bass ?? 5) / 10; v[P.mid] = (p.mid ?? 5) / 10; v[P.treble] = (p.treble ?? 5) / 10;
+    const gdb = p.gateDb === undefined ? -80 : p.gateDb;
+    v[P.gateActive] = gdb === null ? 0 : 1;
+    v[P.gateThreshold] = ((gdb === null ? -80 : gdb) + 100) / 100;
+    v[P.eqActive] = 1; v[P.irOn] = 1; v[P.chopRate] = 5 / 6;
+    DKP.forEach(([key, def, type], i) => {
+      let g = p[key] ?? def;
+      if (type === 1) g = g ? 1 : 0;
+      else if (type === 2) g = Math.max(0, Math.min(2, Math.round(g))) / 2;
+      v[DK_FIRST + i] = g;
+    });
+    return v;
+  };
+  const applyFactory = (preset) => {
+    const v = presetValues(preset.p);
+    Object.keys(v).forEach((k) => { const idx = +k; sendParam(idx, v[k]); applyParam(idx, v[k]); });
+    state.preset = preset.name;
+    if (instance) instance.forceUpdate();
+  };
+  const allPresets = () => FACTORY.map((f) => ({ name: f.name, factory: true })).concat(state.userPresets.map((n) => ({ name: n, factory: false })));
+  const loadPreset = (item) => {
+    if (item.factory) applyFactory(FACTORY.find((f) => f.name === item.name));
+    else { send({ type: 'loadPreset', name: item.name }); state.preset = item.name; if (instance) instance.forceUpdate(); }
+  };
+  const stepPreset = (dir) => {
+    const list = allPresets();
+    let i = list.findIndex((x) => x.name === state.preset);
+    i = i < 0 ? 0 : (i + dir + list.length) % list.length;
+    loadPreset(list[i]);
+  };
+
+  // Small pop-up menus and the "save preset" box (plain DOM, on top of the GUI)
+  let popup = null;
+  const closePopup = () => { if (popup) { popup.remove(); popup = null; } };
+  const popupBox = (x, y, width) => {
+    closePopup();
+    popup = document.createElement('div');
+    popup.setAttribute('style', 'position: fixed; z-index: 9999; width: ' + width + 'px; max-height: 70vh; overflow-y: auto; padding: 6px 0; background: #15171b; border: 3px solid #0b0b0c; border-radius: 6px; box-shadow: 4px 4px 0 #0b0b0c; font-family: "IBM Plex Sans", sans-serif; font-size: 13px; color: #e9e2d6');
+    popup.style.left = Math.max(4, Math.min(x, window.innerWidth - width - 8)) + 'px';
+    popup.style.top = y + 'px';
+    document.body.appendChild(popup);
+    return popup;
+  };
+  const popupHead = (text) => {
+    const h = document.createElement('div');
+    h.textContent = text;
+    h.setAttribute('style', 'padding: 6px 14px 4px; font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.14em; color: #9aa1a8');
+    popup.appendChild(h);
+  };
+  const popupItem = (text, on, fn) => {
+    const it = document.createElement('div');
+    it.textContent = (on ? '\u2713 ' : '\u2003') + text;
+    it.setAttribute('style', 'padding: 6px 14px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis');
+    it.onmouseenter = () => { it.style.background = '#3d434f'; };
+    it.onmouseleave = () => { it.style.backgroun)DKUI",
+    R"DKUI(d = ''; };
+    it.onclick = (e) => { e.stopPropagation(); closePopup(); fn(); };
+    popup.appendChild(it);
+  };
+  const presetMenu = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const zoom = parseFloat((document.getElementById('app') || {}).style?.zoom || '1') || 1;
+    popupBox(r.left * zoom, (r.bottom + 4) * zoom, 260);
+    popupHead('FACTORY PRESETS');
+    FACTORY.forEach((f) => popupItem(f.name, f.name === state.preset, () => applyFactory(f)));
+    popupHead('YOUR PRESETS');
+    if (!state.userPresets.length) {
+      const none = document.createElement('div');
+      none.textContent = typeof IPlugSendMsg === 'function' ? 'None yet. Click Save to keep your sound.' : 'Saved presets appear here in the plugin.';
+      none.setAttribute('style', 'padding: 4px 14px 8px; color: #6c7379; font-size: 12px');
+      popup.appendChild(none);
+    }
+    state.userPresets.forEach((n) => popupItem(n, n === state.preset, () => loadPreset({ name: n, factory: false })));
+  };
+  const saveBox = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const zoom = parseFloat((document.getElementById('app') || {}).style?.zoom || '1') || 1;
+    popupBox(r.left * zoom - 200, (r.bottom + 4) * zoom, 280);
+    popupHead('SAVE PRESET AS');
+    const row = document.createElement('div');
+    row.setAttribute('style', 'display: flex; gap: 6px; padding: 4px 12px 8px');
+    const input = document.createElement('input');
+    input.value = FACTORY.some((f) => f.name === state.preset) ? '' : state.preset;
+    input.placeholder = 'Preset name';
+    input.maxLength = 60;
+    input.setAttribute('style', 'flex: 1; min-width: 0; height: 30px; padding: 0 8px; background: #0b0b0c; color: #e9e2d6; border: 1px solid #4a5158; border-radius: 4px; font-size: 13px');
+    const ok = document.createElement('button');
+    ok.textContent = 'Save';
+    ok.setAttribute('style', 'height: 30px; padding: 0 12px; background: #d9b46a; color: #1b1e21; border: 0; border-radius: 4px; font-weight: 700; cursor: pointer');
+    const doSave = () => {
+      const name = input.value.replace(/[<>:"\/\\|?*\u0000-\u001f]/g, '').trim();
+      if (!name) { input.focus(); return; }
+      send({ type: 'savePreset', name });
+      state.preset = name;
+      if (!state.userPresets.includes(name)) state.userPresets = state.userPresets.concat([name]);
+      closePopup();
+      if (instance) instance.forceUpdate();
+    };
+    ok.onclick = (ev) => { ev.stopPropagation(); doSave(); };
+    input.onkeydown = (ev) => { ev.stopPropagation(); if (ev.key === 'Enter') doSave(); if (ev.key === 'Escape') closePopup(); };
+    row.appendChild(input);
+    row.appendChild(ok);
+    popup.appendChild(row);
+    setTimeout(() => input.focus(), 0);
+  };
+  document.addEventListener('mousedown', (e) => { if (popup && !popup.contains(e.target)) closePopup(); });
+
+  // ---- Tuner ---------------------------------------------------------------------------
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const tunerFields = (hz, ref, mute, accent) => {
+    const title = 'TUNER' + (mute ? ' \u00b7 OUTPUT MUTED' : '');
+    if (!(hz > 20)) {
+      return { note: '\u2013', oct: '', title, color: '#6c7379', text: 'Play a single open string', footer: 'Tuner: \u2013',
+        needle: 'position: absolute; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; background: #4a5158; left: calc(50% - 2px);' };
+    }
+    const midiF = 69 + 12 * Math.log2(hz / ref);
+    const midi = Math.round(midiF);
+    const cents = Math.round((midiF - midi) * 100);
+    const inTune = Math.abs(cents) <= 3;
+    const color = inTune ? '#6fbf73' : accent;
+    const note = NOTE_NAMES[((midi % 12) + 12) % 12];
+    return {
+      note, oct: String(Math.floor(midi / 12) - 1), title, color,
+      needle: 'position: absolute; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; background: ' + color + '; left: calc(' + (50 + Math.max(-50, Math.min(50, cents))) + '% - 2px); transition: left 80ms;',
+      text: hz.toFixed(1) + ' Hz \u00b7 ' + (inTune ? 'in tune' : Math.abs(cents) + ' cents ' + (cents < 0 ? 'flat' : 'sharp')) + ' \u00b7 A = ' + ref + ' Hz',
+      footer: 'Tuner: ' + note + ' ' + (cents > 0 ? '+' : '') + cents + '\u00a2'
+    };
+  };
+
   const recv = (msg) => {
     if (!msg) return;
     if (msg.type === 'state') {
@@ -1751,6 +1920,13 @@ const DK = (() => {
     } else if (msg.type === 'modelList' || msg.type === 'irList') {
       const key = msg.type === 'modelList' ? 'models' : 'irs';
       state[key] = (msg.reset ? [] : state[key]).concat(msg.items || []);
+    } else if (msg.type === 'presetList') {
+      state.userPresets = (msg.reset ? [] : state.userPresets).concat(msg.items || []);
+    } else if (msg.type === 'tuner') {
+      const hz = msg.hz || 0;
+      // smooth the reading a little so the needle doesn't jitter
+      state.tunerSmooth = hz > 0 && state.tunerSmooth > 0 && Math.abs(Math.log2(hz / state.tunerSmooth)) < 0.03 ? state.tunerSmooth * 0.6 + hz * 0.4 : hz;
+      state.tunerHz = state.tunerSmooth;
     } else if (msg.type === 'meters') {
       state.inLvl = msg.in || 0;
       state.outLvl = msg.out || 0;
@@ -1783,7 +1959,16 @@ const DK = (() => {
       instance = null;
     }
     componentDidUpdate() {
-      if (state.live) pushFromGui(this.state);
+      if (!state.live) return;
+      pushFromGui(this.state);
+      const st = this.state || {};
+      const on = st.view === 'tuner';
+      const mute = ((st.opt && st.opt.mute) || 'On') === 'On';
+      if (on !== tunerSent.on || mute !== tunerSent.mute) {
+        tunerSent.on = on;
+        tunerSent.mute = mute;
+        send({ type: 'tuner', on, mute });
+      }
     }
     renderVals() {
       const v = super.renderVals() || {};
@@ -1824,6 +2009,22 @@ const DK = (() => {
       if (state.ir && state.irs.length && state.irIdx >= 0) {
         v.engine.irText = state.irs[state.irIdx].n + '  \u00b7 ' + (state.irIdx + 1) + ' / ' + state.irs.length;
       }
+      v.preset = {
+        name: state.preset,
+        prev: () => stepPreset(-1),
+        next: () => stepPreset(1),
+        menu: (e) => presetMenu(e),
+        save: (e) => saveBox(e)
+      };
+      if (state.live) {
+        const st = this.state || {};
+        const opt = st.opt || {};
+        const t = tunerFields(state.tunerHz, Number(opt.ref || 440), (opt.mute || 'On') === 'On', v.accent || '#d9b46a');
+        v.tuner = Object.assign({}, v.tuner, t);
+        v.footerTuner = t.footer;
+      } else if (plugin) {
+        v.footerInfo = 'Not connected to the sound engine yet' + (v.footerInfo ? ' \u00b7 ' + v.footerInfo : '');
+      }
       if (state.live && v.meters) {
         const i = lvl(state.inLvl), o = lvl(state.outLvl);
         v.meters = Object.assign({}, v.meters, { inL: bar(i), inR: bar(i), outL: bar(o), outR: bar(o) });
@@ -1860,7 +2061,8 @@ const DK = (() => {
     const current = state.windowScale || window.innerWidth / (1100 * 0.85);
     SIZES.forEach((sz) => {
       const item = document.createElement('div');
-      const on = Math.abs(current - sz.scale) < 0.05 || (typeof IPlugSendMsg !== 'function' && sz.scale === 1.0);
+      const on = Math.abs(current - sz.scale) < 0.05 || (typeof IPlug)DKUI",
+    R"DKUI(SendMsg !== 'function' && sz.scale === 1.0);
       item.textContent = (on ? '\u2713 ' : '\u2003') + sz.label;
       item.setAttribute('style', 'padding: 6px 14px; cursor: pointer');
       item.onmouseenter = () => { item.style.background = '#3d434f'; };

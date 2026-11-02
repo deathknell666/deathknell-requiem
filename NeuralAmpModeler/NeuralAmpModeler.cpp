@@ -19,6 +19,11 @@
 #include "IWebViewControl.h"
 #include "DKRequiemUI.h"
 #include <fstream>
+#include <cstring>
+#include <sstream>
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
 #if !defined(_WIN32) && !defined(strnicmp)
 #include <strings.h>
 #define strnicmp strncasecmp // WDL's dirscan.h expects the Windows name
@@ -446,9 +451,29 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   // restore previous floating point state
   std::feupdateenv(&fe_state);
 
+  // Tuner: keep the last moments of the input (before any effects) for pitch detection
+  if (mTunerOn)
+  {
+    size_t w = mTunerWrite.load();
+    for (size_t s = 0; s < numFrames; s++)
+    {
+      const float v = (float)mInputPointers[0][s];
+      if (mTunerOdd)
+      {
+        mTunerRing[w & (kTunerRingSize - 1)] = 0.5f * (mTunerHalf + v);
+        w++;
+      }
+      else
+        mTunerHalf = v;
+      mTunerOdd = !mTunerOdd;
+    }
+    mTunerWrite.store(w);
+  }
+  const bool tunerMuted = mTunerOn && mTunerMute;
+
   // Out to the host: left and right (a mono output gets both mixed)
   {
-    const double gain = mOutputGain;
+    const double gain = tunerMuted ? 0.0 : mOutputGain;
     for (size_t c = 0; c < numChannelsExternalOut; c++)
     {
       for (size_t s = 0; s < numFrames; s++)
@@ -502,6 +527,7 @@ void NeuralAmpModeler::OnIdle()
       mWebForceRescan = false;
       _SendFilesToWeb();
     }
+    _RunTuner();
     const float inPeak = mWebInPeak.exchange(0.0f);
     const float outPeak = mWebOutPeak.exchange(0.0f);
     std::stringstream ss;
@@ -1445,9 +1471,10 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
   {
     mWebReady = true;
     if (auto* pGraphics = GetUI())
-      if (pGraphics->GetDrawScale() != mDKWindowScale)
+      if (std::fabs(pGraphics->GetDrawScale() - mDKWindowScale) > 0.01f)
         pGraphics->Resize(PLUG_WIDTH, PLUG_HEIGHT, mDKWindowScale);
     _SendFullStateToWeb();
+    _SendPresetListToWeb();
     _RefreshFileLists(false);
     _SendFileListToWeb(true);
     _SendFileListToWeb(false);
@@ -1463,6 +1490,19 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
       SendParameterValueFromUI(idx, value);
       EndInformHostOfParamChangeFromUI(idx);
     }
+  }
+  else if (type == "tuner")
+  {
+    mTunerOn = j.value("on", false);
+    mTunerMute = j.value("mute", true);
+  }
+  else if (type == "savePreset")
+  {
+    _SavePreset(j.value("name", std::string()));
+  }
+  else if (type == "loadPreset")
+  {
+    _LoadPreset(j.value("name", std::string()));
   }
   else if (type == "windowSize")
   {
@@ -1524,3 +1564,212 @@ void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
 
 // HACK
 #include "Unserialization.cpp"
+
+// Tuner ======================================================================
+
+void NeuralAmpModeler::_RunTuner()
+{
+  if (!mTunerOn)
+    return;
+  const auto now = std::chrono::steady_clock::now();
+  if (now - mTunerLast < std::chrono::milliseconds(60))
+    return;
+  mTunerLast = now;
+  const int n = 2048;
+  std::vector<float> buf(n);
+  const size_t w = mTunerWrite.load();
+  for (int i = 0; i < n; i++)
+    buf[i] = mTunerRing[(w - n + i) & (kTunerRingSize - 1)];
+  const double hz = dk::DetectPitch(buf.data(), n, GetSampleRate() * 0.5);
+  std::stringstream ss;
+  ss << "{\"type\":\"tuner\",\"hz\":" << hz << "}";
+  _SendToWeb(ss.str());
+}
+
+// Presets ====================================================================
+// User presets are small JSON files in Documents/Deathknell Requiem/Presets, one per preset,
+// holding every parameter by name (so they keep working when new parameters are added).
+
+namespace
+{
+#ifdef OS_WIN
+std::wstring _DKWide(const std::string& utf8)
+{
+  std::vector<wchar_t> w(utf8.size() + 4);
+  UTF8ToUTF16(w.data(), utf8.c_str(), (int)w.size());
+  return std::wstring(w.data());
+}
+#endif
+
+void _DKMakeDir(const std::string& path)
+{
+#ifdef OS_WIN
+  CreateDirectoryW(_DKWide(path).c_str(), nullptr);
+#else
+  mkdir(path.c_str(), 0755);
+#endif
+}
+
+bool _DKWriteFile(const std::string& path, const std::string& data)
+{
+#ifdef OS_WIN
+  FILE* f = _wfopen(_DKWide(path).c_str(), L"wb");
+#else
+  FILE* f = fopen(path.c_str(), "wb");
+#endif
+  if (!f)
+    return false;
+  const bool ok = fwrite(data.data(), 1, data.size(), f) == data.size();
+  fclose(f);
+  return ok;
+}
+
+std::string _DKSafeName(const std::string& name)
+{
+  std::string out;
+  for (unsigned char c : name)
+  {
+    if (c < 32 || strchr("<>:\"/\\|?*", c))
+      continue;
+    out += (char)c;
+  }
+  while (!out.empty() && (out.back() == ' ' || out.back() == '.'))
+    out.pop_back();
+  if (out.size() > 60)
+    out.resize(60);
+  return out;
+}
+} // namespace
+
+std::string NeuralAmpModeler::_PresetFolder(bool create) const
+{
+  std::string docs;
+#ifdef OS_WIN
+  wchar_t* profile = _wgetenv(L"USERPROFILE");
+  if (profile)
+  {
+    WDL_String p;
+    UTF16ToUTF8(p, profile);
+    docs = std::string(p.Get()) + "\\Documents";
+  }
+  const char sep = '\\';
+#else
+  const char* home = getenv("HOME");
+  if (home)
+    docs = std::string(home) + "/Documents";
+  const char sep = '/';
+#endif
+  if (docs.empty())
+    return "";
+  const std::string app = docs + sep + "Deathknell Requiem";
+  const std::string folder = app + sep + "Presets";
+  if (create)
+  {
+    _DKMakeDir(docs);
+    _DKMakeDir(app);
+    _DKMakeDir(folder);
+  }
+  return folder;
+}
+
+void NeuralAmpModeler::_SendPresetListToWeb()
+{
+  std::vector<std::string> names;
+  const std::string folder = _PresetFolder(false);
+  WDL_DirScan scan;
+  if (!folder.empty() && !scan.First(folder.c_str()))
+  {
+    do
+    {
+      if (scan.GetCurrentIsDirectory())
+        continue;
+      const std::string fn = scan.GetCurrentFN();
+      if (fn.size() > 5 && _DKLower(fn.substr(fn.size() - 5)) == ".json")
+        names.push_back(fn.substr(0, fn.size() - 5));
+    } while (!scan.Next());
+  }
+  std::sort(names.begin(), names.end(), [](const std::string& a, const std::string& b) { return _DKLower(a) < _DKLower(b); });
+  // In batches, to stay under the web view's message size limit on Windows
+  size_t i = 0;
+  bool first = true;
+  do
+  {
+    nlohmann::json j;
+    j["type"] = "presetList";
+    j["reset"] = first;
+    j["items"] = nlohmann::json::array();
+    size_t chars = 0;
+    while (i < names.size() && chars < 1500)
+    {
+      j["items"].push_back(names[i]);
+      chars += names[i].size() + 4;
+      i++;
+    }
+    _SendToWeb(j.dump());
+    first = false;
+  } while (i < names.size());
+}
+
+void NeuralAmpModeler::_SavePreset(const std::string& rawName)
+{
+  const std::string name = _DKSafeName(rawName);
+  if (name.empty())
+    return;
+  const std::string folder = _PresetFolder(true);
+  if (folder.empty())
+    return;
+  nlohmann::json j;
+  j["name"] = name;
+  j["plugin"] = "Deathknell Requiem";
+  nlohmann::json params = nlohmann::json::object();
+  for (int i = 0; i < kNumParams; i++)
+  {
+    if (i == kCalibrateInput || i == kInputCalibrationLevel || i == kOutputMode || i == kSlim || i == kChopActive)
+      continue; // settings, not part of a sound
+    params[GetParam(i)->GetName()] = GetParam(i)->GetNormalized();
+  }
+  j["params"] = params;
+#ifdef OS_WIN
+  const std::string path = folder + "\\" + name + ".json";
+#else
+  const std::string path = folder + "/" + name + ".json";
+#endif
+  _DKWriteFile(path, j.dump(2));
+  _SendPresetListToWeb();
+}
+
+void NeuralAmpModeler::_LoadPreset(const std::string& rawName)
+{
+  const std::string name = _DKSafeName(rawName);
+  const std::string folder = _PresetFolder(false);
+  if (name.empty() || folder.empty())
+    return;
+#ifdef OS_WIN
+  const std::string path = folder + "\\" + name + ".json";
+#else
+  const std::string path = folder + "/" + name + ".json";
+#endif
+  nlohmann::json j;
+  try
+  {
+    j = nlohmann::json::parse(_DKReadHead(path, 1 << 20));
+  }
+  catch (...)
+  {
+    return;
+  }
+  if (!j.is_object() || !j["params"].is_object())
+    return;
+  const auto& params = j["params"];
+  for (int i = 0; i < kNumParams; i++)
+  {
+    const auto it = params.find(GetParam(i)->GetName());
+    if (it == params.end() || !it->is_number())
+      continue;
+    const double v = std::clamp(it->get<double>(), 0.0, 1.0);
+    BeginInformHostOfParamChangeFromUI(i);
+    SendParameterValueFromUI(i, v);
+    EndInformHostOfParamChangeFromUI(i);
+  }
+  _SendFullStateToWeb();
+}

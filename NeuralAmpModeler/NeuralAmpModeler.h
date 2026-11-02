@@ -11,6 +11,8 @@
 #include "Colors.h"
 #include "ToneStack.h"
 #include "DKEffects.h"
+#include <atomic>
+#include <chrono>
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "ISender.h"
@@ -296,6 +298,12 @@ private:
   void _RefreshFileLists(bool force);
   void _StepFile(bool isModel, int delta);
   void _PickFile(bool isModel, int index);
+  // Tuner and presets
+  void _RunTuner();
+  std::string _PresetFolder(bool create) const;
+  void _SendPresetListToWeb();
+  void _SavePreset(const std::string& name);
+  void _LoadPreset(const std::string& name);
   void _SendFileListToWeb(bool isModel);
 
   // Update all controls that depend on a model
@@ -376,6 +384,15 @@ private:
   dk::FxChain mDK;
   std::vector<iplug::sample> mDKPre, mDKCab, mDKL, mDKR;
   iplug::sample* mDKPrePtr[1] = {nullptr};
+  // Tuner: the audio thread writes the input (at half the sample rate) into a ring; OnIdle finds the pitch
+  static constexpr size_t kTunerRingSize = 8192;
+  std::vector<float> mTunerRing = std::vector<float>(kTunerRingSize, 0.0f);
+  std::atomic<size_t> mTunerWrite{0};
+  std::atomic<bool> mTunerOn{false};
+  std::atomic<bool> mTunerMute{true};
+  float mTunerHalf = 0.0f;
+  bool mTunerOdd = false;
+  std::chrono::steady_clock::time_point mTunerLast;
   void _ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames);
   float mDKWindowScale = 1.0f; // Small / Medium / Large window, picked from the GUI's right-click menu
 };
