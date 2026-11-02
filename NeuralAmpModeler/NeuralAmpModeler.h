@@ -10,10 +10,21 @@
 
 #include "Colors.h"
 #include "ToneStack.h"
+#include "DKEffects.h"
+#include <atomic>
+#include <chrono>
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "ISender.h"
 
+
+namespace iplug
+{
+namespace igraphics
+{
+class IWebViewControl;
+}
+} // namespace iplug
 
 const int kNumPresets = 1;
 // The plugin is mono inside
@@ -47,7 +58,13 @@ enum EParams
   kInputCalibrationLevel,
   kOutputMode,
   kSlim,
-  kNumParams
+  // Deathknell Requiem: Wraith chopper (rhythmic on/off, synced to the host tempo)
+  kChopActive,
+  kChopRate,
+  // Deathknell Requiem: every other pedal, the EQ and the FX (one parameter per row of
+  // dk::kDKParams in DKEffects.h)
+  kDKFirst,
+  kNumParams = kDKFirst + dk::kNumDKParams
 };
 
 const int numKnobs = 6;
@@ -196,6 +213,12 @@ private:
 class NeuralAmpModeler final : public iplug::Plugin
 {
 public:
+  struct DKFile
+  {
+    std::string path;
+    std::string name;
+    std::string type; // capture tone type (clean, crunch, ...); empty for IRs
+  };
   NeuralAmpModeler(const iplug::InstanceInfo& info);
   ~NeuralAmpModeler();
 
@@ -206,6 +229,7 @@ public:
   bool SerializeState(iplug::IByteChunk& chunk) const override;
   int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
   void OnUIOpen() override;
+  void OnUIClose() override;
   bool OnHostRequestingSupportedViewConfiguration(int width, int height) override { return true; }
 
   void OnParamChange(int paramIdx) override;
@@ -263,6 +287,24 @@ private:
   int _UnserializeStateWithKnownVersion(const iplug::IByteChunk& chunk, int startPos);
   // Hopefully 0.7.3-0.7.8, but no gurantees
   int _UnserializeStateWithUnknownVersion(const iplug::IByteChunk& chunk, int startPos);
+
+  // Deathknell Requiem web GUI (see ui/ and DKRequiemUI.h)
+  void _LoadWebUI(iplug::igraphics::IWebViewControl* pWebView);
+  void _OnWebMessage(const char* jsonStr);
+  void _SendToWeb(const std::string& json);
+  void _SendFullStateToWeb();
+  void _SendFilesToWeb();
+  // Folder browsing: the captures / IRs next to the loaded file, so the GUI's arrows can step through them.
+  void _RefreshFileLists(bool force);
+  void _StepFile(bool isModel, int delta);
+  void _PickFile(bool isModel, int index);
+  // Tuner and presets
+  void _RunTuner();
+  std::string _PresetFolder(bool create) const;
+  void _SendPresetListToWeb();
+  void _SavePreset(const std::string& name);
+  void _LoadPreset(const std::string& name);
+  void _SendFileListToWeb(bool isModel);
 
   // Update all controls that depend on a model
   void _UpdateControlsFromModel();
@@ -324,4 +366,33 @@ private:
   std::unordered_map<std::string, double> mNAMParams = {{"Input", 0.0}, {"Output", 0.0}};
 
   NAMSender mInputSender, mOutputSender;
+
+  // Web GUI state
+  iplug::igraphics::IWebViewControl* mWebView = nullptr;
+  bool mWebReady = false;
+  std::atomic<bool> mWebFilesDirty = false;
+  std::atomic<float> mWebInPeak = 0.0f;
+  std::atomic<float> mWebOutPeak = 0.0f;
+  std::vector<DKFile> mModelList, mIRList;
+  std::string mModelListDir, mIRListDir;
+  bool mWebForceRescan = false;
+  // Chopper state (audio thread only)
+  double mChopPhase = 0.0; // 0..1 through one step
+  double mChopGain = 1.0; // smoothed gain, so the cuts don't click
+  bool mChopWasActive = false;
+  // Pedals, EQ and FX (DKEffects.h)
+  dk::FxChain mDK;
+  std::vector<iplug::sample> mDKPre, mDKCab, mDKL, mDKR;
+  iplug::sample* mDKPrePtr[1] = {nullptr};
+  // Tuner: the audio thread writes the input (at half the sample rate) into a ring; OnIdle finds the pitch
+  static constexpr size_t kTunerRingSize = 8192;
+  std::vector<float> mTunerRing = std::vector<float>(kTunerRingSize, 0.0f);
+  std::atomic<size_t> mTunerWrite{0};
+  std::atomic<bool> mTunerOn{false};
+  std::atomic<bool> mTunerMute{true};
+  float mTunerHalf = 0.0f;
+  bool mTunerOdd = false;
+  std::chrono::steady_clock::time_point mTunerLast;
+  void _ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames);
+  float mDKWindowScale = 1.0f; // Small / Medium / Large window, picked from the GUI's right-click menu
 };

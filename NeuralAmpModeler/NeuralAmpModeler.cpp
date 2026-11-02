@@ -16,6 +16,19 @@
 #include "architecture.hpp"
 
 #include "NeuralAmpModelerControls.h"
+#include "IWebViewControl.h"
+#include "DKRequiemUI.h"
+#include <fstream>
+#include <cstring>
+#include <sstream>
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
+#if !defined(_WIN32) && !defined(strnicmp)
+#include <strings.h>
+#define strnicmp strncasecmp // WDL's dirscan.h expects the Windows name
+#endif
+#include "dirscan.h"
 
 using namespace iplug;
 using namespace igraphics;
@@ -94,6 +107,19 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kInputCalibrationLevel)
     ->InitDouble(kInputCalibrationLevelParamName.c_str(), kDefaultInputCalibrationLevel, -60.0, 60.0, 0.1, "dBu");
   GetParam(kSlim)->InitDouble("Slim", 0.0, 0.0, 1.0, 0.01);
+  GetParam(kChopActive)->InitBool("Chop", false);
+  GetParam(kChopRate)->InitEnum("Chop rate", 5, {"1/2", "1/4", "1/4.", "1/8", "1/8T", "1/16", "1/32"});
+  for (int i = 0; i < dk::kNumDKParams; i++)
+  {
+    const dk::DKParamDef& d = dk::kDKParams[i];
+    if (d.type == dk::kSwitch)
+      GetParam(kDKFirst + i)->InitBool(d.name, d.def > 0.5);
+    else if (d.type == dk::kChoice3)
+      GetParam(kDKFirst + i)->InitEnum(d.name, (int)d.def, {"+1", "+2", "Both"});
+    else
+      GetParam(kDKFirst + i)->InitDouble(d.name, d.def, 0.0, 1.0, 0.001);
+  }
+  mDK.Reset(48000.0);
 
   mNoiseGateTrigger.AddListener(&mNoiseGateGain);
 
@@ -311,6 +337,14 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // pGraphics->GetControlWithTag(kCtrlTagOutNorm)->SetMouseEventsWhenDisabled(false);
     // pGraphics->GetControlWithTag(kCtrlTagCalibrateInput)->SetMouseEventsWhenDisabled(false);
+
+    // Deathknell Requiem GUI: our HTML interface covers the whole window and talks to the engine.
+    // The original controls above stay attached underneath so the rest of the code keeps working.
+    mWebReady = false;
+    mWebView = new IWebViewControl(
+      b, true, [this](IWebViewControl* pWebView) { _LoadWebUI(pWebView); },
+      [this](IWebViewControl* pWebView, const char* json) { _OnWebMessage(json); });
+    pGraphics->AttachControl(mWebView);
   };
 }
 
@@ -339,61 +373,120 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   const bool noiseGateActive = GetParam(kNoiseGateActive)->Value();
   const bool toneStackActive = GetParam(kEQActive)->Value();
 
+  // Pedals, EQ and FX settings for this block
+  {
+    double dkValues[dk::kNumDKParams];
+    for (int i = 0; i < dk::kNumDKParams; i++)
+      dkValues[i] = GetParam(kDKFirst + i)->Value();
+    mDK.SetParams(dkValues, GetTempo(), GetParam(kChopActive)->Bool());
+  }
+  if (mDKPre.size() < numFrames)
+  {
+    mDKPre.resize(numFrames);
+    mDKCab.resize(numFrames);
+    mDKL.resize(numFrames);
+    mDKR.resize(numFrames);
+  }
+
   // Noise gate trigger
   sample** triggerOutput = mInputPointers;
   if (noiseGateActive)
   {
+    // The gate's SOFT/HARD switch: hard snaps shut, soft fades out more slowly
+    const bool gateHard = GetParam(kDKFirst + dk::pGateHard)->Bool();
     const double time = 0.01;
     const double threshold = GetParam(kNoiseGateThreshold)->Value(); // GetParam...
     const double ratio = 0.1; // Quadratic...
-    const double openTime = 0.005;
-    const double holdTime = 0.01;
-    const double closeTime = 0.05;
+    const double openTime = gateHard ? 0.005 : 0.02;
+    const double holdTime = gateHard ? 0.01 : 0.05;
+    const double closeTime = gateHard ? 0.05 : 0.3;
     const dsp::noise_gate::TriggerParams triggerParams(time, threshold, ratio, openTime, holdTime, closeTime);
     mNoiseGateTrigger.SetParams(triggerParams);
     mNoiseGateTrigger.SetSampleRate(sampleRate);
     triggerOutput = mNoiseGateTrigger.Process(mInputPointers, numChannelsInternal, numFrames);
   }
 
+  // Pitch, wah, Wraith fuzz and the pedals, before the amp
+  std::copy(triggerOutput[0], triggerOutput[0] + numFrames, mDKPre.begin());
+  mDK.ProcessPre(mDKPre.data(), numFrames);
+  mDKPrePtr[0] = mDKPre.data();
+  sample** ampInput = mDKPrePtr;
+
   if (mModel != nullptr)
   {
-    mModel->process(triggerOutput, mOutputPointers, nFrames);
+    mModel->process(ampInput, mOutputPointers, nFrames);
   }
   else
   {
-    _FallbackDSP(triggerOutput, mOutputPointers, numChannelsInternal, numFrames);
+    _FallbackDSP(ampInput, mOutputPointers, numChannelsInternal, numFrames);
   }
   // Apply the noise gate after the NAM
   sample** gateGainOutput =
     noiseGateActive ? mNoiseGateGain.Process(mOutputPointers, numChannelsInternal, numFrames) : mOutputPointers;
+
+  // Wraith chopper
+  _ProcessChopper(gateGainOutput, numChannelsInternal, numFrames);
 
   sample** toneStackOutPointers = (toneStackActive && mToneStack != nullptr)
                                     ? mToneStack->Process(gateGainOutput, numChannelsInternal, nFrames)
                                     : gateGainOutput;
 
   sample** irPointers = toneStackOutPointers;
-  if (mIR != nullptr && GetParam(kIRToggle)->Value())
+  const bool irOn = mIR != nullptr && GetParam(kIRToggle)->Value();
+  if (irOn)
     irPointers = mIR->Process(toneStackOutPointers, numChannelsInternal, numFrames);
+  // Cab mix (cab vs. straight amp) and cab level
+  mDK.ProcessCab(toneStackOutPointers[0], irPointers[0], mDKCab.data(), numFrames, irOn);
+  sample* cabPtr[1] = {mDKCab.data()};
 
   // And the HPF for DC offset (Issue 271)
   const double highPassCutoffFreq = kDCBlockerFrequency;
-  // const double lowPassCutoffFreq = 20000.0;
   const recursive_linear_filter::HighPassParams highPassParams(sampleRate, highPassCutoffFreq);
-  // const recursive_linear_filter::LowPassParams lowPassParams(sampleRate, lowPassCutoffFreq);
   mHighPass.SetParams(highPassParams);
-  // mLowPass.SetParams(lowPassParams);
-  sample** hpfPointers = mHighPass.Process(irPointers, numChannelsInternal, numFrames);
-  // sample** lpfPointers = mLowPass.Process(hpfPointers, numChannelsInternal, numFrames);
+  sample** hpfPointers = mHighPass.Process(cabPtr, numChannelsInternal, numFrames);
+
+  // EQ, presence, doubler, room, stereo chorus, delay, reverb and FX volume -> stereo
+  mDK.ProcessPost(hpfPointers[0], mDKL.data(), mDKR.data(), numFrames);
 
   // restore previous floating point state
   std::feupdateenv(&fe_state);
 
-  // Let's get outta here
-  // This is where we exit mono for whatever the output requires.
-  _ProcessOutput(hpfPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
-  // _ProcessOutput(lpfPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
-  // * Output of input leveling (inputs -> mInputPointers),
-  // * Output of output leveling (mOutputPointers -> outputs)
+  // Tuner: keep the last moments of the input (before any effects) for pitch detection
+  if (mTunerOn)
+  {
+    size_t w = mTunerWrite.load();
+    for (size_t s = 0; s < numFrames; s++)
+    {
+      const float v = (float)mInputPointers[0][s];
+      if (mTunerOdd)
+      {
+        mTunerRing[w & (kTunerRingSize - 1)] = 0.5f * (mTunerHalf + v);
+        w++;
+      }
+      else
+        mTunerHalf = v;
+      mTunerOdd = !mTunerOdd;
+    }
+    mTunerWrite.store(w);
+  }
+  const bool tunerMuted = mTunerOn && mTunerMute;
+
+  // Out to the host: left and right (a mono output gets both mixed)
+  {
+    const double gain = tunerMuted ? 0.0 : mOutputGain;
+    for (size_t c = 0; c < numChannelsExternalOut; c++)
+    {
+      for (size_t s = 0; s < numFrames; s++)
+      {
+        double v = numChannelsExternalOut == 1 ? 0.5 * (mDKL[s] + mDKR[s]) : (c % 2 == 0 ? mDKL[s] : mDKR[s]);
+        v *= gain;
+#ifdef APP_API // Ensure valid output to interface
+        v = std::clamp(v, -1.0, 1.0);
+#endif
+        outputs[c][s] = (sample)v;
+      }
+    }
+  }
   _UpdateMeters(mInputPointers, outputs, numFrames, numChannelsInternal, numChannelsExternalOut);
 }
 
@@ -406,7 +499,13 @@ void NeuralAmpModeler::OnReset()
   // 10 cycles should be enough to pass the VST3 tests checking tail behavior.
   // I'm ignoring the model & IR, but it's not the end of the world.
   const int tailCycles = 10;
-  SetTailSize(tailCycles * (int)(sampleRate / kDCBlockerFrequency));
+  // The delay and reverb ring on for a few seconds after the input stops.
+  SetTailSize(std::max(tailCycles * (int)(sampleRate / kDCBlockerFrequency), (int)(6.0 * sampleRate)));
+  mDK.Reset(sampleRate);
+  mDKPre.assign((size_t)std::max(maxBlockSize, 1), 0.0);
+  mDKCab.assign(mDKPre.size(), 0.0);
+  mDKL.assign(mDKPre.size(), 0.0);
+  mDKR.assign(mDKPre.size(), 0.0);
   mInputSender.Reset(sampleRate);
   mOutputSender.Reset(sampleRate);
   // If there is a model or IR loaded, they need to be checked for resampling.
@@ -419,6 +518,22 @@ void NeuralAmpModeler::OnIdle()
 {
   mInputSender.TransmitData(*this);
   mOutputSender.TransmitData(*this);
+
+  if (mWebView && mWebReady)
+  {
+    if (mWebFilesDirty.exchange(false))
+    {
+      _RefreshFileLists(mWebForceRescan);
+      mWebForceRescan = false;
+      _SendFilesToWeb();
+    }
+    _RunTuner();
+    const float inPeak = mWebInPeak.exchange(0.0f);
+    const float outPeak = mWebOutPeak.exchange(0.0f);
+    std::stringstream ss;
+    ss << "{\"type\":\"meters\",\"in\":" << inPeak << ",\"out\":" << outPeak << "}";
+    _SendToWeb(ss.str());
+  }
 
   if (mNewModelLoadedInDSP)
   {
@@ -526,8 +641,22 @@ void NeuralAmpModeler::OnParamChange(int paramIdx)
   }
 }
 
+void NeuralAmpModeler::OnUIClose()
+{
+  mWebView = nullptr;
+  mWebReady = false;
+  Plugin::OnUIClose();
+}
+
 void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
 {
+  if (source != kUI && mWebView && mWebReady)
+  {
+    std::stringstream ss;
+    ss << "{\"type\":\"param\",\"idx\":" << paramIdx << ",\"value\":" << GetParam(paramIdx)->GetNormalized() << "}";
+    _SendToWeb(ss.str());
+  }
+
   if (auto pGraphics = GetUI())
   {
     bool active = GetParam(paramIdx)->Bool();
@@ -770,6 +899,7 @@ std::string NeuralAmpModeler::_StageModel(const WDL_String& modelPath)
     mStagedModel = std::move(temp);
     mNAMPath = modelPath;
     SendControlMsgFromDelegate(kCtrlTagModelFileBrowser, kMsgTagLoadedModel, mNAMPath.GetLength(), mNAMPath.Get());
+    mWebFilesDirty = true;
   }
   catch (std::runtime_error& e)
   {
@@ -810,6 +940,7 @@ dsp::wav::LoadReturnCode NeuralAmpModeler::_StageIR(const WDL_String& irPath)
   {
     mIRPath = irPath;
     SendControlMsgFromDelegate(kCtrlTagIRFileBrowser, kMsgTagLoadedIR, mIRPath.GetLength(), mIRPath.Get());
+    mWebFilesDirty = true;
   }
   else
   {
@@ -986,7 +1117,659 @@ void NeuralAmpModeler::_UpdateMeters(sample** inputPointer, sample** outputPoint
   const int nChansHack = 1;
   mInputSender.ProcessBlock(inputPointer, (int)nFrames, kCtrlTagInputMeter, nChansHack);
   mOutputSender.ProcessBlock(outputPointer, (int)nFrames, kCtrlTagOutputMeter, nChansHack);
+
+  // Peaks for the web GUI meters (read and reset in OnIdle)
+  float inPeak = 0.0f, outPeak = 0.0f;
+  for (size_t i = 0; i < nFrames; i++)
+  {
+    inPeak = std::max(inPeak, (float)std::fabs(inputPointer[0][i]));
+    outPeak = std::max(outPeak, (float)std::fabs(outputPointer[0][i]));
+  }
+  if (inPeak > mWebInPeak.load())
+    mWebInPeak = inPeak;
+  if (outPeak > mWebOutPeak.load())
+    mWebOutPeak = outPeak;
+}
+
+// Deathknell Requiem: Wraith chopper ===========================================
+// Cuts the sound on and off in time with the song: on for the first half of each
+// step, off for the second half. The step length is a note value (1/16 etc.) at
+// the host tempo. While the host is playing, the chops line up with its beat grid.
+
+void NeuralAmpModeler::_ProcessChopper(iplug::sample** buffers, size_t numChannels, size_t numFrames)
+{
+  const bool active = GetParam(kChopActive)->Bool();
+  if (!active && !mChopWasActive && mChopGain >= 1.0)
+    return; // bypassed and fully open: nothing to do
+
+  static const double kBeatsPerStep[] = {2.0, 1.0, 1.5, 0.5, 1.0 / 3.0, 0.25, 0.125};
+  const int rateIdx = std::clamp(GetParam(kChopRate)->Int(), 0, 6);
+  const double beats = kBeatsPerStep[rateIdx];
+  double tempo = GetTempo();
+  if (!(tempo > 1.0))
+    tempo = 120.0;
+  const double sampleRate = GetSampleRate();
+  const double stepsPerSample = tempo / (60.0 * beats * sampleRate);
+  const double smooth = 1.0 - std::exp(-1.0 / (0.0015 * sampleRate)); // ~1.5 ms ramps
+
+  if (active && GetTransportIsRunning())
+    mChopPhase = std::fmod(std::max(0.0, GetPPQPos()) / beats, 1.0); // lock to the host's grid
+  else if (active && !mChopWasActive)
+    mChopPhase = 0.0; // start each press with the sound on
+  mChopWasActive = active;
+
+  for (size_t s = 0; s < numFrames; s++)
+  {
+    const double target = (!active || mChopPhase < 0.5) ? 1.0 : 0.0;
+    mChopGain += (target - mChopGain) * smooth;
+    if (!active && mChopGain > 0.9999)
+      mChopGain = 1.0;
+    for (size_t c = 0; c < numChannels; c++)
+      buffers[c][s] *= (sample)mChopGain;
+    mChopPhase += stepsPerSample;
+    if (mChopPhase >= 1.0)
+      mChopPhase -= std::floor(mChopPhase);
+  }
+}
+
+// Deathknell Requiem web GUI ================================================
+
+void NeuralAmpModeler::_LoadWebUI(IWebViewControl* pWebView)
+{
+#ifdef OS_WIN
+  // WebView2 can't take a page this big as a string, so serve it from a file in the temp folder.
+  wchar_t tempDir[MAX_PATH] = {0};
+  GetTempPathW(MAX_PATH, tempDir);
+  std::wstring pathW = std::wstring(tempDir) + L"DeathknellRequiemUI.html";
+  {
+    std::ofstream f(pathW, std::ios::binary | std::ios::trunc);
+    f << DKRequiemUIHTML();
+  }
+  WDL_String path;
+  UTF16ToUTF8(path, pathW.c_str());
+  std::string url(path.Get());
+  std::replace(url.begin(), url.end(), '\\', '/');
+  url = "/" + url; // LoadFile() adds "file://"
+  pWebView->LoadFile(url.c_str());
+#else
+  pWebView->LoadHTML(DKRequiemUIHTML().c_str());
+#endif
+}
+
+void NeuralAmpModeler::_SendToWeb(const std::string& json)
+{
+  if (!mWebView)
+    return;
+  const std::string script = "window.DK && DK.recv(" + json + ");";
+  mWebView->EvaluateJavaScript(script.c_str());
+}
+
+void NeuralAmpModeler::_SendFilesToWeb()
+{
+  nlohmann::json j;
+  j["type"] = "files";
+  j["model"] = std::string(mNAMPath.Get());
+  j["ir"] = std::string(mIRPath.Get());
+  int modelIdx = -1, irIdx = -1;
+  for (size_t i = 0; i < mModelList.size(); i++)
+    if (mModelList[i].path == mNAMPath.Get())
+      modelIdx = (int)i;
+  for (size_t i = 0; i < mIRList.size(); i++)
+    if (mIRList[i].path == mIRPath.Get())
+      irIdx = (int)i;
+  j["modelIdx"] = modelIdx;
+  j["irIdx"] = irIdx;
+  _SendToWeb(j.dump());
+}
+
+namespace
+{
+std::string _DKLower(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+  return s;
+}
+
+// Read the capture's tone type from the .nam file's metadata (it sits near the start of the file).
+// Falls back to guessing from the file name.
+// std::filesystem's directory listing needs macOS 10.15, and the project targets older macOS, so use WDL.
+std::string _DKReadHead(const std::string& utf8Path, size_t bytes)
+{
+  std::string head(bytes, '\0');
+#ifdef OS_WIN
+  wchar_t wpath[4096];
+  UTF8ToUTF16(wpath, utf8Path.c_str(), 4096);
+  FILE* f = _wfopen(wpath, L"rb");
+#else
+  FILE* f = fopen(utf8Path.c_str(), "rb");
+#endif
+  if (!f)
+    return "";
+  head.resize(fread(&head[0], 1, bytes, f));
+  fclose(f);
+  return head;
+}
+
+std::string _DKCaptureType(const std::string& file, const std::string& name)
+{
+  const std::string head = _DKReadHead(file, 32768);
+  std::string type;
+  const auto key = head.find("\"tone_type\"");
+  if (key != std::string::npos)
+  {
+    const auto colon = head.find(':', key);
+    if (colon != std::string::npos)
+    {
+      const auto q1 = head.find('"', colon);
+      const auto nl = head.find_first_of(",}", colon);
+      if (q1 != std::string::npos && (nl == std::string::npos || q1 < nl))
+      {
+        const auto q2 = head.find('"', q1 + 1);
+        if (q2 != std::string::npos)
+          type = _DKLower(head.substr(q1 + 1, q2 - q1 - 1));
+      }
+    }
+  }
+  if (type == "clean" || type == "crunch" || type == "overdrive" || type == "hi_gain" || type == "fuzz")
+    return type;
+  const std::string n = _DKLower(name);
+  if (n.find("fuzz") != std::string::npos)
+    return "fuzz";
+  if (n.find("clean") != std::string::npos)
+    return "clean";
+  if (n.find("crunch") != std::string::npos || n.find("edge") != std::string::npos)
+    return "crunch";
+  if (n.find("hi gain") != std::string::npos || n.find("high gain") != std::string::npos || n.find("hi-gain") != std::string::npos
+      || n.find("higain") != std::string::npos || n.find("lead") != std::string::npos || n.find("metal") != std::string::npos
+      || n.find("djent") != std::string::npos)
+    return "hi_gain";
+  if (n.find("drive") != std::string::npos || n.find(" od") != std::string::npos || n.find("dirt") != std::string::npos
+      || n.find("rhythm") != std::string::npos)
+    return "overdrive";
+  return "";
+}
+
+int _DKTypeRank(const std::string& t)
+{
+  if (t == "clean")
+    return 0;
+  if (t == "crunch")
+    return 1;
+  if (t == "overdrive")
+    return 2;
+  if (t == "hi_gain")
+    return 3;
+  if (t == "fuzz")
+    return 4;
+  return 5;
+}
+
+std::vector<NeuralAmpModeler::DKFile> _DKScanFolder(const std::string& dir, bool isModel)
+{
+  std::vector<NeuralAmpModeler::DKFile> out;
+  WDL_DirScan scan;
+  if (!scan.First(dir.c_str()))
+  {
+    do
+    {
+      if (scan.GetCurrentIsDirectory())
+        continue;
+      const std::string fn = scan.GetCurrentFN();
+      const auto dot = fn.find_last_of('.');
+      if (dot == std::string::npos || dot == 0)
+        continue;
+      if (_DKLower(fn.substr(dot)) != (isModel ? ".nam" : ".wav"))
+        continue;
+      WDL_String full;
+      scan.GetCurrentFullFN(&full);
+      NeuralAmpModeler::DKFile f;
+      f.path = full.Get();
+      f.name = fn.substr(0, dot);
+      if (isModel)
+        f.type = _DKCaptureType(f.path, f.name);
+      out.push_back(f);
+    } while (!scan.Next());
+  }
+  std::sort(out.begin(), out.end(), [](const NeuralAmpModeler::DKFile& a, const NeuralAmpModeler::DKFile& b) {
+    const int ra = _DKTypeRank(a.type), rb = _DKTypeRank(b.type);
+    if (ra != rb)
+      return ra < rb;
+    return _DKLower(a.name) < _DKLower(b.name);
+  });
+  return out;
+}
+} // namespace
+
+void NeuralAmpModeler::_RefreshFileLists(bool force)
+{
+  for (int k = 0; k < 2; k++)
+  {
+    const bool isModel = k == 0;
+    const WDL_String& current = isModel ? mNAMPath : mIRPath;
+    auto& list = isModel ? mModelList : mIRList;
+    auto& listDir = isModel ? mModelListDir : mIRListDir;
+    if (!current.GetLength())
+      continue;
+    WDL_String dirW(current.Get());
+    dirW.remove_filepart();
+    const std::string dirStr = dirW.Get();
+    if (!force && dirStr == listDir)
+      continue;
+    list = _DKScanFolder(dirStr, isModel);
+    listDir = dirStr;
+    _SendFileListToWeb(isModel);
+  }
+}
+
+void NeuralAmpModeler::_SendFileListToWeb(bool isModel)
+{
+  // Sent in small batches: Windows' web view only takes short scripts.
+  const auto& list = isModel ? mModelList : mIRList;
+  const char* msgType = isModel ? "modelList" : "irList";
+  nlohmann::json batch = nlohmann::json::array();
+  size_t batchChars = 0;
+  bool first = true;
+  auto flush = [&](bool last) {
+    nlohmann::json j;
+    j["type"] = msgType;
+    j["reset"] = first;
+    j["items"] = batch;
+    _SendToWeb(j.dump());
+    first = false;
+    batch = nlohmann::json::array();
+    batchChars = 0;
+  };
+  for (const auto& f : list)
+  {
+    nlohmann::json item;
+    item["n"] = f.name;
+    item["t"] = f.type;
+    const size_t len = item.dump().size();
+    if (batchChars + len > 1500 && batch.size())
+      flush(false);
+    batch.push_back(item);
+    batchChars += len;
+  }
+  flush(true);
+}
+
+void NeuralAmpModeler::_PickFile(bool isModel, int index)
+{
+  const auto& list = isModel ? mModelList : mIRList;
+  if (index < 0 || index >= (int)list.size())
+    return;
+  const WDL_String path(list[index].path.c_str());
+  if (isModel)
+  {
+    const std::string msg = _StageModel(path);
+    if (msg.size())
+    {
+      std::stringstream ss;
+      ss << "Failed to load NAM model. Message:\n\n" << msg;
+      _ShowMessageBox(GetUI(), ss.str().c_str(), "Failed to load model!", kMB_OK);
+    }
+  }
+  else
+  {
+    const dsp::wav::LoadReturnCode retCode = _StageIR(path);
+    if (retCode != dsp::wav::LoadReturnCode::SUCCESS)
+    {
+      std::stringstream message;
+      message << "Failed to load IR file " << path.Get() << ":\n" << dsp::wav::GetMsgForLoadReturnCode(retCode);
+      _ShowMessageBox(GetUI(), message.str().c_str(), "Failed to load IR!", kMB_OK);
+    }
+  }
+  mWebFilesDirty = true;
+}
+
+void NeuralAmpModeler::_StepFile(bool isModel, int delta)
+{
+  _RefreshFileLists(false);
+  const auto& list = isModel ? mModelList : mIRList;
+  if (list.empty())
+    return;
+  const std::string current = isModel ? mNAMPath.Get() : mIRPath.Get();
+  int idx = -1;
+  for (size_t i = 0; i < list.size(); i++)
+    if (list[i].path == current)
+      idx = (int)i;
+  const int n = (int)list.size();
+  idx = idx < 0 ? 0 : ((idx + (delta >= 0 ? 1 : -1)) % n + n) % n;
+  _PickFile(isModel, idx);
+}
+
+void NeuralAmpModeler::_SendFullStateToWeb()
+{
+  nlohmann::json j;
+  j["type"] = "state";
+  j["windowScale"] = mDKWindowScale;
+  j["model"] = std::string(mNAMPath.Get());
+  j["ir"] = std::string(mIRPath.Get());
+  std::vector<double> params;
+  for (int i = 0; i < kNumParams; i++)
+    params.push_back(std::round(GetParam(i)->GetNormalized() * 10000.0) / 10000.0); // short, to fit the message
+  j["params"] = params;
+  _SendToWeb(j.dump());
+}
+
+void NeuralAmpModeler::_OnWebMessage(const char* jsonStr)
+{
+  nlohmann::json j;
+  try
+  {
+    j = nlohmann::json::parse(jsonStr);
+  }
+  catch (...)
+  {
+    return;
+  }
+  if (!j.is_object())
+    return;
+  const std::string type = j.value("type", "");
+
+  if (type == "ready")
+  {
+    mWebReady = true;
+    if (auto* pGraphics = GetUI())
+      if (std::fabs(pGraphics->GetDrawScale() - mDKWindowScale) > 0.01f)
+        pGraphics->Resize(PLUG_WIDTH, PLUG_HEIGHT, mDKWindowScale);
+    _SendFullStateToWeb();
+    _SendPresetListToWeb();
+    _RefreshFileLists(false);
+    _SendFileListToWeb(true);
+    _SendFileListToWeb(false);
+    _SendFilesToWeb();
+  }
+  else if (type == "param")
+  {
+    const int idx = j.value("idx", -1);
+    const double value = std::clamp(j.value("value", 0.0), 0.0, 1.0);
+    if (idx >= 0 && idx < kNumParams)
+    {
+      BeginInformHostOfParamChangeFromUI(idx);
+      SendParameterValueFromUI(idx, value);
+      EndInformHostOfParamChangeFromUI(idx);
+    }
+  }
+  else if (type == "tuner")
+  {
+    mTunerOn = j.value("on", false);
+    mTunerMute = j.value("mute", true);
+  }
+  else if (type == "savePreset")
+  {
+    _SavePreset(j.value("name", std::string()));
+  }
+  else if (type == "loadPreset")
+  {
+    _LoadPreset(j.value("name", std::string()));
+  }
+  else if (type == "windowSize")
+  {
+    const float scale = (float)std::clamp(j.value("scale", 1.0), 0.5, 2.0);
+    mDKWindowScale = scale;
+    if (auto* pGraphics = GetUI())
+      pGraphics->Resize(PLUG_WIDTH, PLUG_HEIGHT, scale);
+  }
+  else if (type == "stepModel" || type == "stepIR")
+  {
+    _StepFile(type == "stepModel", j.value("dir", 1));
+  }
+  else if (type == "pickModel" || type == "pickIR")
+  {
+    _PickFile(type == "pickModel", j.value("index", -1));
+  }
+  else if (type == "loadModel" || type == "loadIR")
+  {
+    IGraphics* pGraphics = GetUI();
+    if (!pGraphics)
+      return;
+    const bool isModel = type == "loadModel";
+    WDL_String fileName, path;
+    if (isModel && mNAMPath.GetLength())
+      path.Set(mNAMPath.Get()), path.remove_filepart();
+    if (!isModel && mIRPath.GetLength())
+      path.Set(mIRPath.Get()), path.remove_filepart();
+    pGraphics->PromptForFile(
+      fileName, path, EFileAction::Open, isModel ? "nam" : "wav",
+      [this, isModel](const WDL_String& chosen, const WDL_String& dir) {
+        if (!chosen.GetLength())
+          return;
+        if (isModel)
+        {
+          const std::string msg = _StageModel(chosen);
+          if (msg.size())
+          {
+            std::stringstream ss;
+            ss << "Failed to load NAM model. Message:\n\n" << msg;
+            _ShowMessageBox(GetUI(), ss.str().c_str(), "Failed to load model!", kMB_OK);
+          }
+        }
+        else
+        {
+          const dsp::wav::LoadReturnCode retCode = _StageIR(chosen);
+          if (retCode != dsp::wav::LoadReturnCode::SUCCESS)
+          {
+            std::stringstream message;
+            message << "Failed to load IR file " << chosen.Get() << ":\n";
+            message << dsp::wav::GetMsgForLoadReturnCode(retCode);
+            _ShowMessageBox(GetUI(), message.str().c_str(), "Failed to load IR!", kMB_OK);
+          }
+        }
+        mWebForceRescan = true;
+        mWebFilesDirty = true;
+      });
+  }
 }
 
 // HACK
 #include "Unserialization.cpp"
+
+// Tuner ======================================================================
+
+void NeuralAmpModeler::_RunTuner()
+{
+  if (!mTunerOn)
+    return;
+  const auto now = std::chrono::steady_clock::now();
+  if (now - mTunerLast < std::chrono::milliseconds(60))
+    return;
+  mTunerLast = now;
+  const int n = 2048;
+  std::vector<float> buf(n);
+  const size_t w = mTunerWrite.load();
+  for (int i = 0; i < n; i++)
+    buf[i] = mTunerRing[(w - n + i) & (kTunerRingSize - 1)];
+  const double hz = dk::DetectPitch(buf.data(), n, GetSampleRate() * 0.5);
+  std::stringstream ss;
+  ss << "{\"type\":\"tuner\",\"hz\":" << hz << "}";
+  _SendToWeb(ss.str());
+}
+
+// Presets ====================================================================
+// User presets are small JSON files in Documents/Deathknell Requiem/Presets, one per preset,
+// holding every parameter by name (so they keep working when new parameters are added).
+
+namespace
+{
+#ifdef OS_WIN
+std::wstring _DKWide(const std::string& utf8)
+{
+  std::vector<wchar_t> w(utf8.size() + 4);
+  UTF8ToUTF16(w.data(), utf8.c_str(), (int)w.size());
+  return std::wstring(w.data());
+}
+#endif
+
+void _DKMakeDir(const std::string& path)
+{
+#ifdef OS_WIN
+  CreateDirectoryW(_DKWide(path).c_str(), nullptr);
+#else
+  mkdir(path.c_str(), 0755);
+#endif
+}
+
+bool _DKWriteFile(const std::string& path, const std::string& data)
+{
+#ifdef OS_WIN
+  FILE* f = _wfopen(_DKWide(path).c_str(), L"wb");
+#else
+  FILE* f = fopen(path.c_str(), "wb");
+#endif
+  if (!f)
+    return false;
+  const bool ok = fwrite(data.data(), 1, data.size(), f) == data.size();
+  fclose(f);
+  return ok;
+}
+
+std::string _DKSafeName(const std::string& name)
+{
+  std::string out;
+  for (unsigned char c : name)
+  {
+    if (c < 32 || strchr("<>:\"/\\|?*", c))
+      continue;
+    out += (char)c;
+  }
+  while (!out.empty() && (out.back() == ' ' || out.back() == '.'))
+    out.pop_back();
+  if (out.size() > 60)
+    out.resize(60);
+  return out;
+}
+} // namespace
+
+std::string NeuralAmpModeler::_PresetFolder(bool create) const
+{
+  std::string docs;
+#ifdef OS_WIN
+  wchar_t* profile = _wgetenv(L"USERPROFILE");
+  if (profile)
+  {
+    WDL_String p;
+    UTF16ToUTF8(p, profile);
+    docs = std::string(p.Get()) + "\\Documents";
+  }
+  const char sep = '\\';
+#else
+  const char* home = getenv("HOME");
+  if (home)
+    docs = std::string(home) + "/Documents";
+  const char sep = '/';
+#endif
+  if (docs.empty())
+    return "";
+  const std::string app = docs + sep + "Deathknell Requiem";
+  const std::string folder = app + sep + "Presets";
+  if (create)
+  {
+    _DKMakeDir(docs);
+    _DKMakeDir(app);
+    _DKMakeDir(folder);
+  }
+  return folder;
+}
+
+void NeuralAmpModeler::_SendPresetListToWeb()
+{
+  std::vector<std::string> names;
+  const std::string folder = _PresetFolder(false);
+  WDL_DirScan scan;
+  if (!folder.empty() && !scan.First(folder.c_str()))
+  {
+    do
+    {
+      if (scan.GetCurrentIsDirectory())
+        continue;
+      const std::string fn = scan.GetCurrentFN();
+      if (fn.size() > 5 && _DKLower(fn.substr(fn.size() - 5)) == ".json")
+        names.push_back(fn.substr(0, fn.size() - 5));
+    } while (!scan.Next());
+  }
+  std::sort(names.begin(), names.end(), [](const std::string& a, const std::string& b) { return _DKLower(a) < _DKLower(b); });
+  // In batches, to stay under the web view's message size limit on Windows
+  size_t i = 0;
+  bool first = true;
+  do
+  {
+    nlohmann::json j;
+    j["type"] = "presetList";
+    j["reset"] = first;
+    j["items"] = nlohmann::json::array();
+    size_t chars = 0;
+    while (i < names.size() && chars < 1500)
+    {
+      j["items"].push_back(names[i]);
+      chars += names[i].size() + 4;
+      i++;
+    }
+    _SendToWeb(j.dump());
+    first = false;
+  } while (i < names.size());
+}
+
+void NeuralAmpModeler::_SavePreset(const std::string& rawName)
+{
+  const std::string name = _DKSafeName(rawName);
+  if (name.empty())
+    return;
+  const std::string folder = _PresetFolder(true);
+  if (folder.empty())
+    return;
+  nlohmann::json j;
+  j["name"] = name;
+  j["plugin"] = "Deathknell Requiem";
+  nlohmann::json params = nlohmann::json::object();
+  for (int i = 0; i < kNumParams; i++)
+  {
+    if (i == kCalibrateInput || i == kInputCalibrationLevel || i == kOutputMode || i == kSlim || i == kChopActive)
+      continue; // settings, not part of a sound
+    params[GetParam(i)->GetName()] = GetParam(i)->GetNormalized();
+  }
+  j["params"] = params;
+#ifdef OS_WIN
+  const std::string path = folder + "\\" + name + ".json";
+#else
+  const std::string path = folder + "/" + name + ".json";
+#endif
+  _DKWriteFile(path, j.dump(2));
+  _SendPresetListToWeb();
+}
+
+void NeuralAmpModeler::_LoadPreset(const std::string& rawName)
+{
+  const std::string name = _DKSafeName(rawName);
+  const std::string folder = _PresetFolder(false);
+  if (name.empty() || folder.empty())
+    return;
+#ifdef OS_WIN
+  const std::string path = folder + "\\" + name + ".json";
+#else
+  const std::string path = folder + "/" + name + ".json";
+#endif
+  nlohmann::json j;
+  try
+  {
+    j = nlohmann::json::parse(_DKReadHead(path, 1 << 20));
+  }
+  catch (...)
+  {
+    return;
+  }
+  if (!j.is_object() || !j["params"].is_object())
+    return;
+  const auto& params = j["params"];
+  for (int i = 0; i < kNumParams; i++)
+  {
+    const auto it = params.find(GetParam(i)->GetName());
+    if (it == params.end() || !it->is_number())
+      continue;
+    const double v = std::clamp(it->get<double>(), 0.0, 1.0);
+    BeginInformHostOfParamChangeFromUI(i);
+    SendParameterValueFromUI(i, v);
+    EndInformHostOfParamChangeFromUI(i);
+  }
+  _SendFullStateToWeb();
+}
